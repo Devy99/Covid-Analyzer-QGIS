@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/plugins/covid_analyzer" >
+        <file>icon.png</file>
+    </qresource>
+</RCC>
