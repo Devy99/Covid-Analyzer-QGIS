@@ -32,6 +32,9 @@ from .resources import *
 from .covid_analyzer_dialog import CovidAnalyzerDialog
 import os.path
 
+PLUGIN_ABSPATH = QgsApplication.qgisSettingsDirPath() + 'python\plugins\covid_analyzer'
+PROV_RELPATH = "\layers\italy_boundaries\italy_prov\ProvCM01012020_WGS84.shp"
+REG_RELPATH = "\layers\italy_boundaries\italy_reg\Reg01012020_WGS84.shp"
 
 class CovidAnalyzer:
     """QGIS Plugin Implementation."""
@@ -211,14 +214,11 @@ def initComponentsGUI(self):
     self.dlg.typeComboBox.addItems(informationsList)
 
     # Init layers comboBox
-    prov_path = "layers/italy_boundaries/italy_prov/ProvCM01012020_WGS84.shp"
+
+    prov_path = PLUGIN_ABSPATH + PROV_RELPATH
     prov_layer = QgsVectorLayer(prov_path, "Province layer", "ogr")
     self.dlg.layerComboBox.addItem("Province layer", prov_layer)
 
-    com_path = "layers/italy_boundaries/italy_com/ComCM01012020_WGS84.shp"
-    com_layer = QgsVectorLayer(com_path, "Country layer", "ogr")
-    self.dlg.layerComboBox.addItem("Country layer", com_layer)
-
-    reg_path = "layers/italy_boundaries/italy_reg/RegCM01012020_WGS84.shp"
+    reg_path = PLUGIN_ABSPATH + REG_RELPATH
     reg_layer = QgsVectorLayer(reg_path, "Region layer", "ogr")
     self.dlg.layerComboBox.addItem("Region layer", reg_layer)
