@@ -23,7 +23,7 @@
     </rect>
    </property>
   </widget>
-  <widget class="QComboBox" name="comboBox_2">
+  <widget class="QComboBox" name="layerComboBox">
    <property name="geometry">
     <rect>
      <x>10</x>
@@ -33,7 +33,7 @@
     </rect>
    </property>
   </widget>
-  <widget class="QCheckBox" name="checkBox_2">
+  <widget class="QCheckBox" name="legendCheckBox">
    <property name="geometry">
     <rect>
      <x>10</x>
@@ -474,7 +474,7 @@
     <enum>Qt::Vertical</enum>
    </property>
   </widget>
-  <widget class="QPushButton" name="pushButton_3">
+  <widget class="QPushButton" name="applyButton">
    <property name="geometry">
     <rect>
      <x>210</x>
@@ -487,7 +487,7 @@
     <string>Applica</string>
    </property>
   </widget>
-  <widget class="QCheckBox" name="checkBox">
+  <widget class="QCheckBox" name="graduatedCheckBox">
    <property name="geometry">
     <rect>
      <x>10</x>
@@ -594,7 +594,7 @@
     <string>Seleziona tipologia di informazione:</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="pushButton_2">
+  <widget class="QPushButton" name="confirmButton">
    <property name="geometry">
     <rect>
      <x>530</x>
@@ -625,7 +625,7 @@
     <string>Anteprima layer:</string>
    </property>
   </widget>
-  <widget class="QComboBox" name="comboBox">
+  <widget class="QComboBox" name="typeComboBox">
    <property name="geometry">
     <rect>
      <x>10</x>
@@ -635,7 +635,7 @@
     </rect>
    </property>
   </widget>
-  <widget class="QPushButton" name="pushButton">
+  <widget class="QPushButton" name="cancelButton">
    <property name="geometry">
     <rect>
      <x>450</x>
@@ -648,7 +648,7 @@
     <string>Annulla</string>
    </property>
   </widget>
-  <widget class="QCheckBox" name="checkBox_3">
+  <widget class="QCheckBox" name="labelCheckBox">
    <property name="geometry">
     <rect>
      <x>10</x>
