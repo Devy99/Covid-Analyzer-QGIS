@@ -24,6 +24,7 @@
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
+from qgis.core import *
 
 # Initialize Qt resources from file resources.py
 from .resources import *
@@ -180,6 +181,8 @@ class CovidAnalyzer:
             self.iface.removeToolBarIcon(action)
 
 
+    
+
     def run(self):
         """Run method that performs all the real work"""
 
@@ -191,6 +194,8 @@ class CovidAnalyzer:
 
         # show the dialog
         self.dlg.show()
+        initComponentsGUI(self)
+        
         # Run the dialog event loop
         result = self.dlg.exec_()
         # See if OK was pressed
@@ -198,3 +203,22 @@ class CovidAnalyzer:
             # Do something useful here - delete the line containing pass and
             # substitute with your code.
             pass
+    
+    
+def initComponentsGUI(self):
+    # Init first comboBox
+    informationsList = ["Casi totali","Casi quotidiani","Morti totali","Morti quotidiane"]
+    self.dlg.typeComboBox.addItems(informationsList)
+
+    # Init layers comboBox
+    prov_path = "layers/italy_boundaries/italy_prov/ProvCM01012020_WGS84.shp"
+    prov_layer = QgsVectorLayer(prov_path, "Province layer", "ogr")
+    self.dlg.layerComboBox.addItem("Province layer", prov_layer)
+
+    com_path = "layers/italy_boundaries/italy_com/ComCM01012020_WGS84.shp"
+    com_layer = QgsVectorLayer(com_path, "Country layer", "ogr")
+    self.dlg.layerComboBox.addItem("Country layer", com_layer)
+
+    reg_path = "layers/italy_boundaries/italy_reg/RegCM01012020_WGS84.shp"
+    reg_layer = QgsVectorLayer(reg_path, "Region layer", "ogr")
+    self.dlg.layerComboBox.addItem("Region layer", reg_layer)
