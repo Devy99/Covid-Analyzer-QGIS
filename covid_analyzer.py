@@ -32,9 +32,9 @@ from .resources import *
 from .covid_analyzer_dialog import CovidAnalyzerDialog
 import os.path
 
-PLUGIN_ABSPATH = QgsApplication.qgisSettingsDirPath() + 'python\plugins\covid_analyzer'
-PROV_RELPATH = "\layers\italy_boundaries\italy_prov\ProvCM01012020_WGS84.shp"
-REG_RELPATH = "\layers\italy_boundaries\italy_reg\Reg01012020_WGS84.shp"
+PLUGIN_ABSPATH = QgsApplication.qgisSettingsDirPath() + 'python/plugins/Covid-Analyzer-QGIS'
+PROV_RELPATH = "/layers/italy_boundaries/italy_prov/ProvCM01012020_WGS84.shp"
+REG_RELPATH = "/layers/italy_boundaries/italy_reg/Reg01012020_WGS84.shp"
 
 class CovidAnalyzer:
     """QGIS Plugin Implementation."""
