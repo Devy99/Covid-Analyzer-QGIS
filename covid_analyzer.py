@@ -210,6 +210,7 @@ class CovidAnalyzer:
     def showCanvas(self):
         canvas.setCanvasColor(Qt.white)
         canvas.enableAntiAliasing(True)
+        canvas.move(50,50)
         canvas.show()
         lyr_name = self.dlg.layerComboBox.currentText()
         the_layer = layersMap[lyr_name]
