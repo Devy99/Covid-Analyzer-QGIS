@@ -21,8 +21,8 @@
  *                                                                         *
  ***************************************************************************/
 """
-from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
-from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
+from qgis.PyQt.QtGui import QIcon, QColor
 from qgis.PyQt.QtWidgets import QAction
 from qgis.core import *
 
@@ -32,9 +32,32 @@ from .resources import *
 from .covid_analyzer_dialog import CovidAnalyzerDialog
 import os.path
 
+from qgis.gui import (
+    QgsMapCanvas,
+    QgsVertexMarker,
+    QgsMapCanvasItem,
+    QgsRubberBand,
+)
+# Absolute path of plugin folder
 PLUGIN_ABSPATH = QgsApplication.qgisSettingsDirPath() + 'python/plugins/Covid-Analyzer-QGIS'
+
+# Path of Region layer file and Province layer file 
 PROV_RELPATH = "/layers/italy_boundaries/italy_prov/ProvCM01012020_WGS84.shp"
 REG_RELPATH = "/layers/italy_boundaries/italy_reg/Reg01012020_WGS84.shp"
+
+# Complete filepath of layers
+reg_path = PLUGIN_ABSPATH + REG_RELPATH
+prov_path = PLUGIN_ABSPATH + PROV_RELPATH
+
+# Instantiate layers
+reg_layer = QgsVectorLayer(reg_path, "Region layer", "ogr")
+prov_layer = QgsVectorLayer(prov_path, "Province layer", "ogr")
+
+# Static declaration of layersMap
+layersMap = {"Province layer": prov_layer, "Region layer": reg_layer}
+
+# Instantiate a global canvas
+canvas = QgsMapCanvas()
 
 class CovidAnalyzer:
     """QGIS Plugin Implementation."""
@@ -184,6 +207,20 @@ class CovidAnalyzer:
             self.iface.removeToolBarIcon(action)
 
 
+    def showCanvas(self):
+        canvas.setCanvasColor(Qt.white)
+        canvas.enableAntiAliasing(True)
+        canvas.show()
+        lyr_name = self.dlg.layerComboBox.currentText()
+        the_layer = layersMap[lyr_name]
+        if not the_layer.isValid():
+            print("Layer failed to load!")
+
+        # set extent to the extent of our layer
+        canvas.setExtent(the_layer.extent())
+
+        # set the map canvas layer set
+        canvas.setLayers([the_layer])
     
 
     def run(self):
@@ -197,8 +234,11 @@ class CovidAnalyzer:
 
         # show the dialog
         self.dlg.show()
+
         initComponentsGUI(self)
-        
+
+        self.dlg.applyButton.clicked.connect(self.showCanvas)
+
         # Run the dialog event loop
         result = self.dlg.exec_()
         # See if OK was pressed
@@ -206,19 +246,19 @@ class CovidAnalyzer:
             # Do something useful here - delete the line containing pass and
             # substitute with your code.
             pass
-    
-    
+
 def initComponentsGUI(self):
-    # Init first comboBox
+
+    # Clearing existing data
+    self.dlg.typeComboBox.clear()
+    self.dlg.layerComboBox.clear()
+
+    # Init informations comboBox
     informationsList = ["Casi totali","Casi quotidiani","Morti totali","Morti quotidiane"]
     self.dlg.typeComboBox.addItems(informationsList)
 
     # Init layers comboBox
-
-    prov_path = PLUGIN_ABSPATH + PROV_RELPATH
-    prov_layer = QgsVectorLayer(prov_path, "Province layer", "ogr")
-    self.dlg.layerComboBox.addItem("Province layer", prov_layer)
-
-    reg_path = PLUGIN_ABSPATH + REG_RELPATH
-    reg_layer = QgsVectorLayer(reg_path, "Region layer", "ogr")
-    self.dlg.layerComboBox.addItem("Region layer", reg_layer)
+    layersNameList = ["Province layer", "Region layer"]
+    self.dlg.layerComboBox.addItems(layersNameList)
+    
+    
