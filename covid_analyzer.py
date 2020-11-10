@@ -206,6 +206,18 @@ class CovidAnalyzer:
                 action)
             self.iface.removeToolBarIcon(action)
 
+    def showLabels(self):
+        lyr_name = self.dlg.layerComboBox.currentText()
+        the_layer = layersMap[lyr_name]
+        pal_layer = QgsPalLayerSettings()
+        pal_layer.fieldName = 'DEN_PROV'
+        pal_layer.enabled = True
+        pal_layer.placement = QgsPalLayerSettings.OverPoint
+        labels = QgsVectorLayerSimpleLabeling(pal_layer)
+        the_layer.setLabeling(labels)
+        the_layer.setLabelsEnabled(True)
+        the_layer.triggerRepaint()
+
 
     def showCanvas(self):
         canvas.setCanvasColor(Qt.white)
@@ -222,7 +234,8 @@ class CovidAnalyzer:
 
         # set the map canvas layer set
         canvas.setLayers([the_layer])
-    
+
+        self.showLabels()
 
     def run(self):
         """Run method that performs all the real work"""
