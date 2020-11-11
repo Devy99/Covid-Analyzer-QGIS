@@ -269,7 +269,7 @@ class CovidAnalyzer:
 
         initComponentsGUI(self)
 
-        self.dlg.applyButton.clicked.connect(self.showCanvas)
+        self.dlg.previewButton.clicked.connect(self.showCanvas)
 
         # Run the dialog event loop
         result = self.dlg.exec_()

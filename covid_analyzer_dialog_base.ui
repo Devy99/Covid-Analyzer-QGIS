@@ -36,7 +36,7 @@
     <string>Legenda </string>
    </property>
   </widget>
-  <widget class="QPushButton" name="applyButton">
+  <widget class="QPushButton" name="previewButton">
    <property name="geometry">
     <rect>
      <x>10</x>
@@ -46,7 +46,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Applica</string>
+    <string>Anteprima</string>
    </property>
   </widget>
   <widget class="QCheckBox" name="graduatedCheckBox">
