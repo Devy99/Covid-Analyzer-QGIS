@@ -223,7 +223,7 @@ class CovidAnalyzer:
             self.iface.removeToolBarIcon(action)
 
     def showLabels(self):
-        lyr_name = self.dlg.layerComboBox.currentText()
+        lyr_name = self.ui.layerComboBox.currentText()
         the_layer = layersMap[lyr_name]
         pal_layer = QgsPalLayerSettings()
         pal_layer.fieldName = 'DEN_PROV'
@@ -242,7 +242,7 @@ class CovidAnalyzer:
         canvas.enableAntiAliasing(True)
         canvas.move(50,50)
         canvas.show()
-        lyr_name = self.dlg.layerComboBox.currentText()
+        lyr_name = self.ui.layerComboBox.currentText()
         the_layer = layersMap[lyr_name]
         if not the_layer.isValid():
             print("Layer failed to load!")
@@ -262,17 +262,17 @@ class CovidAnalyzer:
         # Only create GUI ONCE in callback, so that it will only load when the plugin is started
         if self.first_start == True:
             self.first_start = False
-            self.dlg = CovidAnalyzerDialog()
+            self.ui = CovidAnalyzerDialog()
 
         # show the dialog
-        self.dlg.show()
+        self.ui.show()
 
         initComponentsGUI(self)
 
-        self.dlg.previewButton.clicked.connect(self.showCanvas)
+        self.ui.previewButton.clicked.connect(self.showCanvas)
 
         # Run the dialog event loop
-        result = self.dlg.exec_()
+        result = self.ui.exec_()
         # See if OK was pressed
         if result:
             # Do something useful here - delete the line containing pass and
@@ -282,21 +282,21 @@ class CovidAnalyzer:
 def initComponentsGUI(self):
 
     # Clearing existing data
-    self.dlg.typeComboBox.clear()
-    self.dlg.layerComboBox.clear()
+    self.ui.typeComboBox.clear()
+    self.ui.layerComboBox.clear()
 
     # Init informations comboBox
     informationsList = ["Casi totali","Casi quotidiani","Morti totali","Morti quotidiane"]
-    self.dlg.typeComboBox.addItems(informationsList)
+    self.ui.typeComboBox.addItems(informationsList)
 
     # Init layers comboBox
     layersNameList = ["Province layer", "Region layer"]
-    self.dlg.layerComboBox.addItems(layersNameList)
+    self.ui.layerComboBox.addItems(layersNameList)
     
 
 def downloadSelectedCsv(self):
     # Get data from UI
-    pyQgisDate = self.dlg.dateEdit.date() 
+    pyQgisDate = self.ui.dateEdit.date() 
     dateString = pyQgisDate.toPyDate()
     dateString = str(dateString).replace('-', '')
 
@@ -304,7 +304,7 @@ def downloadSelectedCsv(self):
     url = dateString
 
     # Check selected layer
-    selectedLayerName = self.dlg.layerComboBox.currentText()
+    selectedLayerName = self.ui.layerComboBox.currentText()
     filePrefix = ''
 
     if selectedLayerName == 'Province layer':
