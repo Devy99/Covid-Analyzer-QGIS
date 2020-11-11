@@ -21,28 +21,38 @@
  *                                                                         *
  ***************************************************************************/
 """
-import urllib.request
-from tempfile import TemporaryFile
 
-from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
+# Qgis library
+from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtGui import QIcon, QColor
-from qgis.PyQt.QtWidgets import QAction
+from qgis.PyQt.QtWidgets import QAction, QProgressBar
 from qgis.core import *
-
-# Initialize Qt resources from file resources.py
-from .resources import *
-# Import the code for the dialog
-from .covid_analyzer_dialog import CovidAnalyzerDialog
-
-import os.path
-import os
 
 from qgis.gui import (
     QgsMapCanvas,
     QgsVertexMarker,
     QgsMapCanvasItem,
     QgsRubberBand,
+    QgsMessageBar
 )
+# Initialize Qt resources from file resources.py
+from .resources import *
+
+# Data url retrieve library
+import urllib.request
+from urllib.error import URLError, HTTPError
+
+# Import the code for the dialog
+from .covid_analyzer_dialog import CovidAnalyzerDialog
+
+# Utility import
+import os.path
+import os
+import io
+import time
+from tempfile import TemporaryFile
+
+
 # Absolute path of plugin folder
 THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
 
@@ -59,6 +69,11 @@ layersMap = {"Province layer": prov_layer, "Region layer": reg_layer}
 
 # Instantiate a global canvas
 canvas = QgsMapCanvas()
+
+# Csv costant prefixs and suffix
+PROV_URL_PREFIX = 'https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-province/dpc-covid19-ita-province-'
+REG_URL_PREFIX = 'https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-regioni/dpc-covid19-ita-regioni-'
+URL_SUFFIX = '.csv'
 
 class CovidAnalyzer:
     """QGIS Plugin Implementation."""
@@ -221,6 +236,8 @@ class CovidAnalyzer:
 
 
     def showCanvas(self):
+        
+        downloadSelectedCsv(self)
         canvas.setCanvasColor(Qt.white)
         canvas.enableAntiAliasing(True)
         canvas.move(50,50)
@@ -277,4 +294,37 @@ def initComponentsGUI(self):
     self.dlg.layerComboBox.addItems(layersNameList)
     
 
+def downloadSelectedCsv(self):
+    # Get data from UI
+    pyQgisDate = self.dlg.dateEdit.date() 
+    dateString = pyQgisDate.toPyDate()
+    dateString = str(dateString).replace('-', '')
 
+    # Concatenate final CSV url
+    url = dateString
+
+    # Check selected layer
+    selectedLayerName = self.dlg.layerComboBox.currentText()
+    filePrefix = ''
+
+    if selectedLayerName == 'Province layer':
+        url = PROV_URL_PREFIX + dateString + URL_SUFFIX
+        filePrefix = 'Prov'
+    elif selectedLayerName == 'Region layer':
+        url = REG_URL_PREFIX + dateString + URL_SUFFIX
+        filePrefix = 'Reg'
+    
+    # Generating filename
+    fileName = filePrefix + dateString + '.csv'
+    relativeFilepath = 'csv_cache/' + fileName
+
+    csvFile = os.path.join(THIS_FOLDER, relativeFilepath)
+
+    # Check if file exists in cache
+    if not os.path.isfile(csvFile):
+        try:
+            response =  urllib.request.urlretrieve(url, csvFile) 
+        except HTTPError as e:
+            self.iface.messageBar().pushMessage("Error", "Cannot retrieve any csv data at selected date", level=Qgis.Critical)
+        except URLError as e:
+            self.iface.messageBar().pushMessage("Error", "Request rejected. Check your internet connection", level=Qgis.Critical)
