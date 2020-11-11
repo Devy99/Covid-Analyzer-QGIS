@@ -21,6 +21,9 @@
  *                                                                         *
  ***************************************************************************/
 """
+import urllib.request
+from tempfile import TemporaryFile
+
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
 from qgis.PyQt.QtGui import QIcon, QColor
 from qgis.PyQt.QtWidgets import QAction
@@ -30,7 +33,9 @@ from qgis.core import *
 from .resources import *
 # Import the code for the dialog
 from .covid_analyzer_dialog import CovidAnalyzerDialog
+
 import os.path
+import os
 
 from qgis.gui import (
     QgsMapCanvas,
@@ -39,19 +44,15 @@ from qgis.gui import (
     QgsRubberBand,
 )
 # Absolute path of plugin folder
-PLUGIN_ABSPATH = QgsApplication.qgisSettingsDirPath() + 'python/plugins/Covid-Analyzer-QGIS'
+THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
 
 # Path of Region layer file and Province layer file 
-PROV_RELPATH = "/layers/italy_boundaries/italy_prov/ProvCM01012020_WGS84.shp"
-REG_RELPATH = "/layers/italy_boundaries/italy_reg/Reg01012020_WGS84.shp"
-
-# Complete filepath of layers
-reg_path = PLUGIN_ABSPATH + REG_RELPATH
-prov_path = PLUGIN_ABSPATH + PROV_RELPATH
+PROV_PATH = os.path.join(THIS_FOLDER, 'layers/italy_boundaries/italy_prov/ProvCM01012020_WGS84.shp')
+REG_PATH = os.path.join(THIS_FOLDER, 'layers/italy_boundaries/italy_reg/Reg01012020_WGS84.shp')
 
 # Instantiate layers
-reg_layer = QgsVectorLayer(reg_path, "Region layer", "ogr")
-prov_layer = QgsVectorLayer(prov_path, "Province layer", "ogr")
+reg_layer = QgsVectorLayer(REG_PATH, "Region layer", "ogr")
+prov_layer = QgsVectorLayer(PROV_PATH, "Province layer", "ogr")
 
 # Static declaration of layersMap
 layersMap = {"Province layer": prov_layer, "Region layer": reg_layer}
@@ -275,4 +276,5 @@ def initComponentsGUI(self):
     layersNameList = ["Province layer", "Region layer"]
     self.dlg.layerComboBox.addItems(layersNameList)
     
-    
+
+
