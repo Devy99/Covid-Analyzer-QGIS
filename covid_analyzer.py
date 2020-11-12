@@ -45,11 +45,18 @@ from urllib.error import URLError, HTTPError
 # Import the code for the dialog
 from .covid_analyzer_dialog import CovidAnalyzerDialog
 
+# Join library
+import processing
+
+# CSV handling library
+import pandas as pd
+
 # Utility import
 import os.path
 import os
 import io
 import time
+from datetime import timedelta 
 from tempfile import TemporaryFile
 
 
@@ -66,6 +73,10 @@ prov_layer = QgsVectorLayer(PROV_PATH, "Province layer", "ogr")
 
 # Static declaration of layersMap
 layersMap = {"Province layer": prov_layer, "Region layer": reg_layer}
+
+# Layer type constants
+REGION_LAYER = "Region layer"
+PROVINCE_LAYER = "Province layer"
 
 # Instantiate a global canvas
 canvas = QgsMapCanvas()
@@ -223,35 +234,41 @@ class CovidAnalyzer:
             self.iface.removeToolBarIcon(action)
 
     def showLabels(self):
-        lyr_name = self.ui.layerComboBox.currentText()
-        the_layer = layersMap[lyr_name]
-        pal_layer = QgsPalLayerSettings()
-        pal_layer.fieldName = 'DEN_PROV'
-        pal_layer.enabled = True
-        pal_layer.placement = QgsPalLayerSettings.OverPoint
-        labels = QgsVectorLayerSimpleLabeling(pal_layer)
-        the_layer.setLabeling(labels)
-        the_layer.setLabelsEnabled(True)
-        the_layer.triggerRepaint()
+        layerName = self.ui.layerComboBox.currentText()
+        layer = layersMap[layerName]
+        palLayer = QgsPalLayerSettings()
+        palLayer.fieldName = 'DEN_PROV'
+        palLayer.enabled = True
+        palLayer.placement = QgsPalLayerSettings.OverPoint
+        labels = QgsVectorLayerSimpleLabeling(palLayer)
+        layer.setLabeling(labels)
+        layer.setLabelsEnabled(True)
+        layer.triggerRepaint()
 
 
     def showCanvas(self):
-        
-        downloadSelectedCsv(self)
+        selectedDate = getCurrentDateFromUI(self)
+        selectedCsvFilename = downloadCsvByDate(self, selectedDate)
+        previousDate = getPreviousDateFromUI(self)
+        previousdCsvFilename = downloadCsvByDate(self, previousDate)
+
         canvas.setCanvasColor(Qt.white)
         canvas.enableAntiAliasing(True)
         canvas.move(50,50)
         canvas.show()
-        lyr_name = self.ui.layerComboBox.currentText()
-        the_layer = layersMap[lyr_name]
-        if not the_layer.isValid():
+        layerName = self.ui.layerComboBox.currentText()
+        layer = layersMap[layerName]
+        if not layer.isValid():
             print("Layer failed to load!")
 
+        performTableJoin(selectedCsvFilename, layerName)
+        QgsProject.instance().addMapLayer(layersMap["Join result"])
+
         # set extent to the extent of our layer
-        canvas.setExtent(the_layer.extent())
+        canvas.setExtent(layer.extent())
 
         # set the map canvas layer set
-        canvas.setLayers([the_layer])
+        canvas.setLayers([layer])
 
         self.showLabels()
 
@@ -292,13 +309,25 @@ def initComponentsGUI(self):
     # Init layers comboBox
     layersNameList = ["Province layer", "Region layer"]
     self.ui.layerComboBox.addItems(layersNameList)
-    
 
-def downloadSelectedCsv(self):
+def getCurrentDateFromUI(self):
     # Get data from UI
     pyQgisDate = self.ui.dateEdit.date() 
-    dateString = pyQgisDate.toPyDate()
-    dateString = str(dateString).replace('-', '')
+    currentDate = pyQgisDate.toPyDate()
+    return currentDate
+
+def getPreviousDateFromUI(self):
+    # Get data from UI
+    pyQgisDate = self.ui.dateEdit.date() 
+    currentDate = pyQgisDate.toPyDate()
+
+    previousDate = currentDate - timedelta(days = 1)
+    return previousDate
+
+
+# This method takes as parameter the Date of csv to download and return the filename in output
+def downloadCsvByDate(self, date):
+    dateString = str(date).replace('-', '')
 
     # Concatenate final CSV url
     url = dateString
@@ -323,8 +352,61 @@ def downloadSelectedCsv(self):
     # Check if file exists in cache
     if not os.path.isfile(csvFile):
         try:
-            response =  urllib.request.urlretrieve(url, csvFile) 
+            response =  urllib.request.urlretrieve(url, csvFile)
         except HTTPError as e:
             self.iface.messageBar().pushMessage("Error", "Cannot retrieve any csv data at selected date", level=Qgis.Critical)
         except URLError as e:
             self.iface.messageBar().pushMessage("Error", "Request rejected. Check your internet connection", level=Qgis.Critical)
+    
+    return fileName
+
+# This method perform table joins between a .shp file and a .csv file in their reg/prov code
+def performTableJoin(csvFilename, layerType):
+    csvUri = "file:///" + THIS_FOLDER + "/csv_cache/" + csvFilename
+    csv = QgsVectorLayer(csvUri, "csv", "delimitedtext")
+
+    if layerType == REGION_LAYER:
+        fixRegionCsv(csvUri)
+
+        shp = layersMap['Region layer']
+        csvField = 'denominazione_regione'
+        shpField='DEN_REG'
+    elif layerType == PROVINCE_LAYER:
+        shp = layersMap['Province layer']
+        csvField = 'sigla_provincia'
+        shpField='SIGLA' 
+
+    joinObject = QgsVectorLayerJoinInfo()
+    joinObject.setJoinFieldName(csvField)
+    joinObject.setTargetFieldName(shpField)
+    joinObject.setJoinLayerId(csv.id())
+    #QgsProject.instance().addMapLayer(shp)
+    #QgsProject.instance().addMapLayer(csv)
+    
+    joinObject.setUsingMemoryCache(True)
+    joinObject.setJoinLayer(csv)
+    QgsMessageLog.logMessage( csvUri, 'MyPlugin', level=Qgis.Info)
+    
+    shp.addJoin(joinObject)
+
+    shp.selectAll()
+    # Clear dictionary
+    if "Join result" in layersMap:
+       layersMap.pop("Join result")
+
+    layersMap["Join result"] = processing.run("native:saveselectedfeatures", {'INPUT': shp, 'OUTPUT': 'memory:'})['OUTPUT']
+    shp.removeSelection()
+
+# This method adapt retrieved region CSV in order to be abled to perform join
+def fixRegionCsv(csvFilepath):
+    csv = pd.read_csv(csvFilepath)
+
+    if csv.shape[0] > 20: # Check if Csv was fixed previously
+        csv.iloc[11,2]  = 4  # Change region code to 4
+        csv.iloc[11,3]  = 'Trentino-Alto Adige'  # Change region name
+
+        for x in range(6, 21):  # Merging Bolzano and Trento rows
+            csv.iloc[11,x]  += csv.iloc[12,x]
+
+        csv.drop(12,axis=0,inplace=True) # Drop Bolzano row
+        csv.to_csv(csvFilepath) # Saving updated CSV 
