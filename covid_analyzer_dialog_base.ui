@@ -17,7 +17,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>140</y>
+     <y>50</y>
      <width>231</width>
      <height>22</height>
     </rect>
@@ -26,10 +26,10 @@
   <widget class="QCheckBox" name="legendCheckBox">
    <property name="geometry">
     <rect>
-     <x>10</x>
-     <y>330</y>
+     <x>20</x>
+     <y>310</y>
      <width>181</width>
-     <height>16</height>
+     <height>21</height>
     </rect>
    </property>
    <property name="text">
@@ -52,10 +52,10 @@
   <widget class="QCheckBox" name="graduatedCheckBox">
    <property name="geometry">
     <rect>
-     <x>10</x>
-     <y>300</y>
+     <x>20</x>
+     <y>280</y>
      <width>181</width>
-     <height>16</height>
+     <height>21</height>
     </rect>
    </property>
    <property name="text">
@@ -66,9 +66,9 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>270</y>
+     <y>250</y>
      <width>201</width>
-     <height>16</height>
+     <height>21</height>
     </rect>
    </property>
    <property name="font">
@@ -84,7 +84,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>220</y>
+     <y>210</y>
      <width>91</width>
      <height>21</height>
     </rect>
@@ -106,9 +106,9 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>110</y>
+     <y>20</y>
      <width>201</width>
-     <height>16</height>
+     <height>21</height>
     </rect>
    </property>
    <property name="font">
@@ -124,8 +124,8 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>190</y>
-     <width>201</width>
+     <y>180</y>
+     <width>231</width>
      <height>16</height>
     </rect>
    </property>
@@ -142,9 +142,9 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>30</y>
-     <width>201</width>
-     <height>16</height>
+     <y>100</y>
+     <width>261</width>
+     <height>21</height>
     </rect>
    </property>
    <property name="font">
@@ -173,7 +173,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>60</y>
+     <y>130</y>
      <width>231</width>
      <height>22</height>
     </rect>
@@ -195,10 +195,10 @@
   <widget class="QCheckBox" name="labelCheckBox">
    <property name="geometry">
     <rect>
-     <x>10</x>
-     <y>360</y>
+     <x>20</x>
+     <y>340</y>
      <width>181</width>
-     <height>16</height>
+     <height>21</height>
     </rect>
    </property>
    <property name="text">
