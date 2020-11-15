@@ -261,7 +261,7 @@ class CovidAnalyzer:
         if not layer.isValid():
             print("Layer failed to load!")
 
-        performTableJoin(selectedCsvFilename, layerName)
+        performTableJoin(self, selectedCsvFilename, layerName)
         QgsProject.instance().addMapLayer(layersMap["Join result"])
 
         # set extent to the extent of our layer
@@ -321,7 +321,7 @@ def updateInformationComboBox(self):
     if selectedLayerName == "Region layer":
         informationsList = ["Casi totali","Casi quotidiani","Tamponi","Dimessi guariti","Deceduti"]
     elif  selectedLayerName == "Province layer":
-        informationsList = ["Casi totali","Casi quotidiani"]
+        informationsList = ["Casi totali","Variazione casi"]
     self.ui.typeComboBox.addItems(informationsList)
 
 def getCurrentDateFromUI(self):
@@ -375,17 +375,21 @@ def downloadCsvByDate(self, date):
     return fileName
 
 # This method perform table joins between a .shp file and a .csv file in their reg/prov code
-def performTableJoin(csvFilename, layerType):
-    csvUri = "file:///" + THIS_FOLDER + "/csv_cache/" + csvFilename
+def performTableJoin(self, csvFilename, layerType):
+    csvFilepath = THIS_FOLDER + "/csv_cache/" + csvFilename
+    csvUri = "file:///" + csvFilepath
+
     csv = QgsVectorLayer(csvUri, "csv", "delimitedtext")
 
     if layerType == REGION_LAYER:
-        fixRegionCsv(csvUri.replace("file:///","")) # file prefix is needed only for join operation
+        fixRegionCsv(csvFilepath)
 
         shp = layersMap['Region layer']
         csvField = 'denominazione_regione'
         shpField='DEN_REG'
     elif layerType == PROVINCE_LAYER:
+        calculateCasesVariation(self, csvFilepath)
+
         shp = layersMap['Province layer']
         csvField = 'sigla_provincia'
         shpField='SIGLA' 
@@ -424,3 +428,42 @@ def fixRegionCsv(csvFilepath):
 
         csv.drop(12,axis=0,inplace=True) # Drop Bolzano row
         csv.to_csv(csvFilepath) # Saving updated CSV 
+
+# This method adapt retrieved province CSV in order to get cases variation data
+def calculateCasesVariation(self, csvFilepath):
+    previousDate = getPreviousDateFromUI(self)
+    previousCsvFilename = downloadCsvByDate(self, previousDate)
+    previousCsvFilepath = THIS_FOLDER + "/csv_cache/" + previousCsvFilename
+
+    currentCsv = pd.read_csv(csvFilepath)
+    previousCsv = pd.read_csv(previousCsvFilepath)
+
+    # Check if the csv was modified previously
+    if not 'variazione' in currentCsv: 
+        countRowCurrentCsv = currentCsv.shape[0]
+        countRowPreviousCsv = previousCsv.shape[0]
+
+        totalCasesVar = []
+        # Take total cases of selected day from defined provinces
+        for i in range(countRowCurrentCsv):
+            if not (currentCsv.loc[i,"denominazione_provincia"] == "In fase di definizione/aggiornamento") and not(currentCsv.loc[i,"denominazione_provincia"] == "Fuori Regione / Provincia Autonoma"):
+                totalCasesVar.append(currentCsv.loc[i, "totale_casi"])
+
+        # Take total cases of previous day from defined provinces and subtract from the ones of next day
+        count = 0
+        for i in range(countRowPreviousCsv):
+            if not (previousCsv.loc[i,"denominazione_provincia"] == "In fase di definizione/aggiornamento") and not(previousCsv.loc[i,"denominazione_provincia"] == "Fuori Regione / Provincia Autonoma"):
+                totalCasesVar[count] -= previousCsv.loc[i, "totale_casi"]
+                count += 1
+
+        # Create the column variation 
+        currentCsv.insert(10, "variazione", 0, True) 
+
+        # Put variation value in the new column 'variazione'
+        count = 0
+        for i in range(countRowCurrentCsv):
+            if not (currentCsv.loc[i,"denominazione_provincia"] == "In fase di definizione/aggiornamento") and not(currentCsv.loc[i,"denominazione_provincia"] == "Fuori Regione / Provincia Autonoma"):
+                currentCsv.loc[i,"variazione"] += totalCasesVar[count]
+                count += 1
+
+        currentCsv.to_csv(csvFilepath) # Saving updated CSV 
