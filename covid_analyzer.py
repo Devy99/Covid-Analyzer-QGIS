@@ -286,6 +286,8 @@ class CovidAnalyzer:
 
         initComponentsGUI(self)
 
+        # Widget signals
+        self.ui.layerComboBox.currentIndexChanged.connect(lambda: updateInformationComboBox(self))
         self.ui.previewButton.clicked.connect(self.showCanvas)
 
         # Run the dialog event loop
@@ -296,19 +298,31 @@ class CovidAnalyzer:
             # substitute with your code.
             pass
 
-def initComponentsGUI(self):
 
+def initComponentsGUI(self):
     # Clearing existing data
     self.ui.typeComboBox.clear()
     self.ui.layerComboBox.clear()
 
+    # Init layers comboBox
+    layersNameList = ["Region layer", "Province layer"]
+    self.ui.layerComboBox.addItems(layersNameList)
+    
     # Init informations comboBox
-    informationsList = ["Casi totali","Casi quotidiani","Morti totali","Morti quotidiane"]
+    informationsList = ["Casi totali","Casi quotidiani","Tamponi","Dimessi guariti","Deceduti"]
     self.ui.typeComboBox.addItems(informationsList)
 
-    # Init layers comboBox
-    layersNameList = ["Province layer", "Region layer"]
-    self.ui.layerComboBox.addItems(layersNameList)
+def updateInformationComboBox(self):
+    # Clearing existing data
+    self.ui.typeComboBox.clear()
+
+    # Update informations comboBox
+    selectedLayerName = self.ui.layerComboBox.currentText()
+    if selectedLayerName == "Region layer":
+        informationsList = ["Casi totali","Casi quotidiani","Tamponi","Dimessi guariti","Deceduti"]
+    elif  selectedLayerName == "Province layer":
+        informationsList = ["Casi totali","Casi quotidiani"]
+    self.ui.typeComboBox.addItems(informationsList)
 
 def getCurrentDateFromUI(self):
     # Get data from UI
