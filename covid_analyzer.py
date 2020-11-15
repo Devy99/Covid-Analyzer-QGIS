@@ -380,7 +380,7 @@ def performTableJoin(csvFilename, layerType):
     csv = QgsVectorLayer(csvUri, "csv", "delimitedtext")
 
     if layerType == REGION_LAYER:
-        fixRegionCsv(csvUri)
+        fixRegionCsv(csvUri.replace("file:///","")) # file prefix is needed only for join operation
 
         shp = layersMap['Region layer']
         csvField = 'denominazione_regione'
@@ -406,7 +406,7 @@ def performTableJoin(csvFilename, layerType):
     shp.selectAll()
     # Clear dictionary
     if "Join result" in layersMap:
-       layersMap.pop("Join result")
+       del layersMap["Join result"] # In order to avoid duplicated entries
 
     layersMap["Join result"] = processing.run("native:saveselectedfeatures", {'INPUT': shp, 'OUTPUT': 'memory:'})['OUTPUT']
     shp.removeSelection()
