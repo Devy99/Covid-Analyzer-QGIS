@@ -245,6 +245,8 @@ class CovidAnalyzer:
         layer.setLabelsEnabled(True)
         layer.triggerRepaint()
 
+    def resetUi(self): 
+        self.first_start = True
 
     def showCanvas(self):
         selectedDate = getCurrentDateFromUI(self)
@@ -289,6 +291,7 @@ class CovidAnalyzer:
         # Widget signals
         self.ui.layerComboBox.currentIndexChanged.connect(lambda: updateInformationComboBox(self))
         self.ui.previewButton.clicked.connect(self.showCanvas)
+        self.ui.rejected.connect(self.resetUi)
 
         # Run the dialog event loop
         result = self.ui.exec_()
@@ -315,6 +318,8 @@ def initComponentsGUI(self):
 def updateInformationComboBox(self):
     # Clearing existing data
     self.ui.typeComboBox.clear()
+
+    informationsList = []
 
     # Update informations comboBox
     selectedLayerName = self.ui.layerComboBox.currentText()
