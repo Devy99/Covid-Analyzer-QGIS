@@ -24,7 +24,7 @@
 
 # Qgis library
 from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtGui import QIcon, QColor
+from qgis.PyQt.QtGui import QIcon, QColor, QFont
 from qgis.PyQt.QtWidgets import QAction, QProgressBar
 from qgis.core import *
 
@@ -272,6 +272,57 @@ class CovidAnalyzer:
 
         self.showLabels()
 
+    def showLayout(self):
+ 
+        QgsProject.instance().addMapLayer(prov_layer)
+
+        project = QgsProject.instance()
+        manager = project.layoutManager()
+        layoutName = 'LegendLayout'
+        layouts_list = manager.printLayouts()
+        # remove any duplicate layouts
+        for layout in layouts_list:
+            if layout.name() == layoutName:
+                manager.removeLayout(layout)
+        layout = QgsPrintLayout(project)
+        layout.initializeDefaults()
+        layout.setName(layoutName)
+        manager.addLayout(layout)
+        
+        # create map item in the layout
+        map = QgsLayoutItemMap(layout)
+        map.setRect(20, 20, 20, 20)
+        
+        # set the map extent
+        ms = QgsMapSettings()
+        ms.setLayers([prov_layer]) # set layers to be mapped
+        rect = QgsRectangle(ms.fullExtent())
+        rect.scale(1.5)
+        ms.setExtent(rect)
+        map.setExtent(rect)
+        map.setBackgroundColor(QColor(255, 255, 255, 0))
+        layout.addLayoutItem(map)
+        
+        map.attemptMove(QgsLayoutPoint(5, 20, QgsUnitTypes.LayoutMillimeters))
+        map.attemptResize(QgsLayoutSize(180, 180, QgsUnitTypes.LayoutMillimeters))
+        
+        legend = QgsLayoutItemLegend(layout)
+        legend.setTitle("Legend")
+        layout.addLayoutItem(legend)
+        legend.attemptMove(QgsLayoutPoint(230, 15, QgsUnitTypes.LayoutMillimeters))
+        
+        title = QgsLayoutItemLabel(layout)
+        title.setText("My Title")
+        title.setFont(QFont('Arial', 24))
+        title.adjustSizeToText()
+        layout.addLayoutItem(title)
+        title.attemptMove(QgsLayoutPoint(10, 5, QgsUnitTypes.LayoutMillimeters))
+        
+        layout = manager.layoutByName(layoutName)
+        self.iface.showLayoutManager ()
+        
+
+
     def run(self):
         """Run method that performs all the real work"""
 
@@ -283,6 +334,7 @@ class CovidAnalyzer:
 
         # show the dialog
         self.ui.show()
+        self.showLayout()
 
         initComponentsGUI(self)
 
