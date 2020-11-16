@@ -524,3 +524,37 @@ def calculateCasesVariation(self, csvFilepath):
                 count += 1
 
         currentCsv.to_csv(csvFilepath) # Saving updated CSV 
+    
+def addDenominationToCsvField(csvFilepath):
+    csv = pd.read_csv(csvFilepath)
+    countRow = csv.shape[0]
+
+    # Check if the column wasn't previously added and if it's a prov/reg csv
+    if ("Prov" in url) and (not 'den_totale_casi' in csv):
+        # Create the columns 'den_totale_casi' and 'den_variazione'
+        csv.insert(11, "den_totale_casi", 0, True) 
+        csv.insert(12, "den_variazione", 0, True)
+
+        # Init 'den_totale_casi' and 'den_variazione' columns and append province denomination as value of each row
+        for i in range(countRow):
+            if not (csv.loc[i,"denominazione_provincia"] == "In fase di definizione/aggiornamento") and not(csv.loc[i,"denominazione_provincia"] == "Fuori Regione / Provincia Autonoma"):
+                csv.loc[i,"den_totale_casi"] = csv.loc[i,"denominazione_provincia"] + " " + str(csv.loc[i,"totale_casi"])
+                csv.loc[i,"den_variazione"] = csv.loc[i,"denominazione_provincia"] + " " + str(csv.loc[i,"variazione"])
+            
+    elif ("Reg" in url) and (not 'den_totale_casi' in csv):
+        # Create the columns 'den_totale_casi' and 'den_variazione'
+        csv.insert(21,"den_totale_casi", 0, True) 
+        csv.insert(22,"den_nuovi_positivi", 0, True) 
+        csv.insert(23,"den_tamponi", 0, True)  
+        csv.insert(24,"den_dimessi_guariti", 0, True) 
+        csv.insert(25,"den_deceduti", 0, True) 
+
+        # Init 'den_totale_casi' and 'den_variazione' columns and append province denomination as value of each row
+        for i in range(countRow):
+            csv.loc[i,"den_totale_casi"] = csv.loc[i,"denominazione_regione"] + " " + str(csv.loc[i,"totale_casi"])
+            csv.loc[i,"den_nuovi_positivi"] = csv.loc[i,"denominazione_regione"] + " " + str(csv.loc[i,"nuovi_positivi"])
+            csv.loc[i,"den_tamponi"] = csv.loc[i,"denominazione_regione"] + " " + str(csv.loc[i,"tamponi"])
+            csv.loc[i,"den_dimessi_guariti"] = csv.loc[i,"denominazione_regione"] + " " + str(csv.loc[i,"dimessi_guariti"])
+            csv.loc[i,"den_deceduti"] = csv.loc[i,"denominazione_regione"] + " " + str(csv.loc[i,"deceduti"])
+
+    csv.to_csv(csvFilepath) # Saving updated CSV
