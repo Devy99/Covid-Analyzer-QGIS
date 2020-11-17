@@ -248,9 +248,7 @@ class CovidAnalyzer:
     def showCanvas(self):
         try:
             selectedDate = getCurrentDateFromUI(self)
-            selectedCsvFilename = downloadCsvByDate(self, selectedDate)
-            previousDate = getPreviousDateFromUI(self)
-            previousdCsvFilename = downloadCsvByDate(self, previousDate)
+            csvFilename = downloadCsvByDate(self, selectedDate)
         except Exception as ex:
             self.iface.messageBar().pushMessage("Error", str(ex), level=Qgis.Critical)
             return None
@@ -264,7 +262,7 @@ class CovidAnalyzer:
         if not layer.isValid():
             print("Layer failed to load!")
 
-        performTableJoin(self, selectedCsvFilename, layerName)
+        performTableJoin(self, csvFilename, layerName)
         QgsProject.instance().addMapLayer(layersMap["Join result"])
 
         # set extent to the extent of our layer
