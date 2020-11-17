@@ -254,9 +254,19 @@ class CovidAnalyzer:
             return None
 
         layerName = self.ui.layerComboBox.currentText()
-        layer = layersMap[layerName]
+        layer = QgsVectorLayer(REG_PATH, layerName, "ogr")
+
+        prova = QgsProject.instance().count()
  
         QgsProject.instance().addMapLayer(layer)
+
+        if (QgsProject.instance().count() >= 2):
+            ara = QgsProject.instance().count()
+            QgsMessageLog.logMessage( str(ara) + 'maggiore di 2', 'MyPlugin', level=Qgis.Info)
+            QgsProject.instance().removeAllMapLayers()
+            layer = QgsVectorLayer(REG_PATH, layerName, "ogr")
+            QgsProject.instance().addMapLayer(layer)
+
 
         project = QgsProject.instance()
         manager = project.layoutManager()
@@ -301,7 +311,7 @@ class CovidAnalyzer:
         title.attemptMove(QgsLayoutPoint(10, 5, QgsUnitTypes.LayoutMillimeters))
         
         layout = manager.layoutByName(layoutName)
-        self.iface.showLayoutManager ()
+        self.iface.showLayoutManager()
         
 
 
