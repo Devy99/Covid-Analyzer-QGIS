@@ -249,11 +249,15 @@ class CovidAnalyzer:
         self.first_start = True
 
     def showCanvas(self):
-        selectedDate = getCurrentDateFromUI(self)
-        selectedCsvFilename = downloadCsvByDate(self, selectedDate)
-        previousDate = getPreviousDateFromUI(self)
-        previousdCsvFilename = downloadCsvByDate(self, previousDate)
-
+        try:
+            selectedDate = getCurrentDateFromUI(self)
+            selectedCsvFilename = downloadCsvByDate(self, selectedDate)
+            previousDate = getPreviousDateFromUI(self)
+            previousdCsvFilename = downloadCsvByDate(self, previousDate)
+        except Exception as ex:
+            self.iface.messageBar().pushMessage("Error", str(ex), level=Qgis.Critical)
+            return None
+    
         canvas.setCanvasColor(Qt.white)
         canvas.enableAntiAliasing(True)
         canvas.move(50,50)
@@ -274,7 +278,7 @@ class CovidAnalyzer:
 
         self.showLabels()
 
-    def showLayout(self):
+    """  def showLayout(self):
  
         QgsProject.instance().addMapLayer(prov_layer)
 
@@ -321,7 +325,7 @@ class CovidAnalyzer:
         title.attemptMove(QgsLayoutPoint(10, 5, QgsUnitTypes.LayoutMillimeters))
         
         layout = manager.layoutByName(layoutName)
-        self.iface.showLayoutManager ()
+        self.iface.showLayoutManager ()"""
         
 
 
@@ -336,7 +340,7 @@ class CovidAnalyzer:
 
         # show the dialog
         self.ui.show()
-        self.showLayout()
+        # self.showLayout()
 
         initComponentsGUI(self)
 
@@ -425,9 +429,9 @@ def downloadCsvByDate(self, date):
         try:
             response =  urllib.request.urlretrieve(url, csvFile)
         except HTTPError as e:
-            self.iface.messageBar().pushMessage("Error", "Cannot retrieve any csv data at selected date", level=Qgis.Critical)
+            raise Exception("Cannot retrieve any csv data at selected date")
         except URLError as e:
-            self.iface.messageBar().pushMessage("Error", "Request rejected. Check your internet connection", level=Qgis.Critical)
+            raise Exception("Request rejected. Check your internet connection")
     
     return fileName
 
@@ -488,9 +492,13 @@ def fixRegionCsv(csvFilepath):
 
 # This method adapt retrieved province CSV in order to get cases variation data
 def calculateCasesVariation(self, csvFilepath):
-    previousDate = getPreviousDateFromUI(self)
-    previousCsvFilename = downloadCsvByDate(self, previousDate)
-    previousCsvFilepath = THIS_FOLDER + "/csv_cache/" + previousCsvFilename
+    try: 
+        previousDate = getPreviousDateFromUI(self)
+        previousCsvFilename = downloadCsvByDate(self, previousDate)
+        previousCsvFilepath = THIS_FOLDER + "/csv_cache/" + previousCsvFilename
+    except Exception as ex:
+        self.iface.messageBar().pushMessage("Error", str(ex), level=Qgis.Critical)
+        return None
 
     currentCsv = pd.read_csv(csvFilepath)
     previousCsv = pd.read_csv(previousCsvFilepath)
