@@ -245,44 +245,25 @@ class CovidAnalyzer:
     def resetUi(self): 
         self.first_start = True
 
-    def showCanvas(self):
+    def showLayout(self):
         try:
             selectedDate = getCurrentDateFromUI(self)
             csvFilename = downloadCsvByDate(self, selectedDate)
         except Exception as ex:
             self.iface.messageBar().pushMessage("Error", str(ex), level=Qgis.Critical)
             return None
-    
-        canvas.setCanvasColor(Qt.white)
-        canvas.enableAntiAliasing(True)
-        canvas.move(50,50)
-        canvas.show()
+
         layerName = self.ui.layerComboBox.currentText()
         layer = layersMap[layerName]
-        if not layer.isValid():
-            print("Layer failed to load!")
-
-        performTableJoin(self, csvFilename, layerName)
-        QgsProject.instance().addMapLayer(layersMap["Join result"])
-
-        # set extent to the extent of our layer
-        canvas.setExtent(layer.extent())
-
-        # set the map canvas layer set
-        canvas.setLayers([layer])
-
-        self.showLabels()
-
-    """  def showLayout(self):
  
-        QgsProject.instance().addMapLayer(prov_layer)
+        QgsProject.instance().addMapLayer(layer)
 
         project = QgsProject.instance()
         manager = project.layoutManager()
         layoutName = 'LegendLayout'
-        layouts_list = manager.printLayouts()
+        layoutsList = manager.printLayouts()
         # remove any duplicate layouts
-        for layout in layouts_list:
+        for layout in layoutsList:
             if layout.name() == layoutName:
                 manager.removeLayout(layout)
         layout = QgsPrintLayout(project)
@@ -320,7 +301,7 @@ class CovidAnalyzer:
         title.attemptMove(QgsLayoutPoint(10, 5, QgsUnitTypes.LayoutMillimeters))
         
         layout = manager.layoutByName(layoutName)
-        self.iface.showLayoutManager ()"""
+        self.iface.showLayoutManager ()
         
 
 
@@ -335,13 +316,12 @@ class CovidAnalyzer:
 
         # show the dialog
         self.ui.show()
-        # self.showLayout()
 
         initComponentsGUI(self)
 
         # Widget signals
         self.ui.layerComboBox.currentIndexChanged.connect(lambda: updateInformationComboBox(self))
-        self.ui.previewButton.clicked.connect(self.showCanvas)
+        self.ui.previewButton.clicked.connect(self.showLayout)
         self.ui.rejected.connect(self.resetUi)
 
         # Run the dialog event loop
