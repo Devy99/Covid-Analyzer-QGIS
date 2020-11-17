@@ -38,10 +38,6 @@ from qgis.gui import (
 # Initialize Qt resources from file resources.py
 from .resources import *
 
-# Data url retrieve library
-import urllib.request
-from urllib.error import URLError, HTTPError
-
 # Import the code for the dialog
 from .covid_analyzer_dialog import CovidAnalyzerDialog
 
@@ -56,6 +52,7 @@ import os.path
 import os
 import io
 import time
+import requests
 from datetime import timedelta 
 from tempfile import TemporaryFile
 
@@ -427,12 +424,14 @@ def downloadCsvByDate(self, date):
     # Check if file exists in cache
     if not os.path.isfile(csvFile):
         try:
-            response =  urllib.request.urlretrieve(url, csvFile)
-        except HTTPError as e:
-            raise Exception("Cannot retrieve any csv data at selected date")
-        except URLError as e:
+            response = requests.get(url, timeout=10)
+        except:
             raise Exception("Request rejected. Check your internet connection")
+
+        if response.status_code == 404:
+            raise Exception("Cannot retrieve any csv data at selected date")
     
+        open(csvFile, 'wb').write(response.content)
     return fileName
 
 # This method perform table joins between a .shp file and a .csv file in their reg/prov code
