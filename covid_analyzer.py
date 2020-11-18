@@ -83,6 +83,8 @@ PROV_URL_PREFIX = 'https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dat
 REG_URL_PREFIX = 'https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-regioni/dpc-covid19-ita-regioni-'
 URL_SUFFIX = '.csv'
 
+multiLayer = False
+
 class CovidAnalyzer:
     """QGIS Plugin Implementation."""
 
@@ -245,6 +247,22 @@ class CovidAnalyzer:
     def resetUi(self): 
         self.first_start = True
 
+    def confirm(self):
+
+        layerName = self.ui.layerComboBox.currentText()
+
+        global multiLayer
+
+        if (multiLayer == True):
+            if (layerName == 'Region layer'):
+                layer = QgsVectorLayer(REG_PATH, 'Province layer', "ogr")
+                QgsProject.instance().addMapLayer(layer)
+            elif (layerName == 'Province layer'):
+                layer = QgsVectorLayer(REG_PATH, 'Region layer', "ogr")
+                QgsProject.instance().addMapLayer(layer)
+
+
+
     def showLayout(self):
         try:
             selectedDate = getCurrentDateFromUI(self)
@@ -260,9 +278,15 @@ class CovidAnalyzer:
  
         QgsProject.instance().addMapLayer(layer)
 
+        for layer in self.iface.mapCanvas().layers():
+            if (layerName != layer.name()):
+                QgsMessageLog.logMessage( 'entrato', 'MyPlugin', level=Qgis.Info)
+                global multiLayer
+                multiLayer = True
+                QgsMessageLog.logMessage( str(multiLayer), 'MyPlugin', level=Qgis.Info)
+
         if (QgsProject.instance().count() >= 2):
             ara = QgsProject.instance().count()
-            QgsMessageLog.logMessage( str(ara) + 'maggiore di 2', 'MyPlugin', level=Qgis.Info)
             QgsProject.instance().removeAllMapLayers()
             layer = QgsVectorLayer(REG_PATH, layerName, "ogr")
             QgsProject.instance().addMapLayer(layer)
@@ -333,6 +357,7 @@ class CovidAnalyzer:
         self.ui.layerComboBox.currentIndexChanged.connect(lambda: updateInformationComboBox(self))
         self.ui.previewButton.clicked.connect(self.showLayout)
         self.ui.rejected.connect(self.resetUi)
+        self.ui.confirmButton.clicked.connect(self.confirm)
 
         # Run the dialog event loop
         result = self.ui.exec_()
