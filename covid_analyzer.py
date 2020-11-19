@@ -318,7 +318,7 @@ class CovidAnalyzer:
         
         if not layer.isValid():
             print("Layer failed to load!")
-
+        
         performTableJoin(self, csvFilename, layerName)
 
         # test = QgsVectorLayer(addDenominationToCsvField(THIS_FOLDER + "/csv_cache/"+ csvFilename), "csv", "delimitedtext")
@@ -506,10 +506,10 @@ def downloadCsvByDate(self, date):
     fileName = filePrefix + dateString + '.csv'
     relativeFilepath = 'csv_cache/' + fileName
 
-    csvFile = os.path.join(THIS_FOLDER, relativeFilepath)
+    csvFilepath = os.path.join(THIS_FOLDER, relativeFilepath)
 
     # Check if file exists in cache
-    if not os.path.isfile(csvFile):
+    if not os.path.isfile(csvFilepath):
         try:
             response = requests.get(url, timeout=10)
         except:
@@ -518,22 +518,28 @@ def downloadCsvByDate(self, date):
         if response.status_code == 404:
             raise Exception("Cannot retrieve any csv data at selected date")
     
-        open(csvFile, 'wb').write(response.content)
+        open(csvFilepath, 'wb').write(response.content)
         
-        if selectedLayerName == 'Province layer':
-            calculateCasesVariation(self, csvFile)
     return fileName
+
+
+def fixDownloadedCsv(self, csvFilepath, layerName):
+    # Fixing downloaded csv
+    if layerName == 'Region layer':
+        fixRegionCsv(csvFilepath)
+    elif layerName == 'Province layer':
+        calculateCasesVariation(self, csvFilepath)
 
 # This method perform table joins between a .shp file and a .csv file in their reg/prov code
 def performTableJoin(self, csvFilename, layerType):
     csvFilepath = THIS_FOLDER + "/csv_cache/" + csvFilename
     csvUri = "file:///" + csvFilepath
 
+    fixDownloadedCsv(self, csvFilepath, layerType)
+
     csv = QgsVectorLayer(csvUri, "csv", "delimitedtext")
 
     if layerType == REGION_LAYER:
-        fixRegionCsv(csvFilepath)
-
         shp = layersMap['Region layer']
         csvField = 'denominazione_regione'
         shpField='DEN_REG'
