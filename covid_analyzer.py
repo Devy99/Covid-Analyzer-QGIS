@@ -27,6 +27,7 @@ from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtGui import QIcon, QColor, QFont
 from qgis.PyQt.QtWidgets import QAction, QProgressBar
 from qgis.core import *
+from PyQt5 import QtCore, QtGui
 
 from qgis.gui import (
     QgsMapCanvas,
@@ -244,6 +245,58 @@ class CovidAnalyzer:
         layer.setLabelsEnabled(True)
         layer.triggerRepaint()
 
+    def showGraduation(self, layer):
+        targetField = 'csv_totale_casi'
+        rangeList = []
+        opacity = 1
+
+        # define value ranges
+        minVal = 0.0
+        maxVal = 5000.0
+        
+        # range label
+        lab = 'Group 1'
+        
+        # color (yellow)
+        rangeColor = QtGui.QColor('#ffee00')
+        
+        # create symbol and set properties
+        symbol1 = QgsSymbol.defaultSymbol(layer.geometryType())
+        symbol1.setColor(rangeColor)
+        symbol1.setOpacity(opacity)
+        
+        #create range and append to rangeList
+        range1 = QgsRendererRange(minVal, maxVal, symbol1, lab)
+        rangeList.append(range1)
+
+        # define value ranges
+        minVal = 5000.1
+        maxVal = 100000.0
+        
+        # range label
+        lab = 'Group 2'
+        
+        # color (yellow)
+        rangeColor = QtGui.QColor('#00eeff')
+        
+        # create symbol and set properties
+        symbol2 = QgsSymbol.defaultSymbol(layer.geometryType())
+        symbol2.setColor(rangeColor)
+        symbol2.setOpacity(opacity)
+        
+        #create range and append to rangeList
+        range2 = QgsRendererRange(minVal, maxVal, symbol2, lab)
+        rangeList.append(range2)
+
+        # create the renderer
+        groupRenderer = QgsGraduatedSymbolRenderer('', rangeList)
+        groupRenderer.setMode(QgsGraduatedSymbolRenderer.EqualInterval)
+        groupRenderer.setClassAttribute(targetField)
+        
+        # apply renderer to layer
+        layer.setRenderer(groupRenderer)
+
+
     def resetUi(self): 
         self.first_start = True
 
@@ -268,6 +321,11 @@ class CovidAnalyzer:
 
         performTableJoin(self, csvFilename, layerName)
         QgsProject.instance().addMapLayer(layersMap["Join result"])
+
+        layer = layersMap["Join result"]
+
+        if (self.ui.graduatedCheckBox.isChecked()):
+            self.showGraduation(layer)
 
         # set extent to the extent of our layer
         canvas.setExtent(layer.extent())
