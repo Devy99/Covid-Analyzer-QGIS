@@ -558,6 +558,11 @@ def performTableJoin(self, csvFilename, layerType):
        del layersMap["Join result"] # In order to avoid duplicated entries
 
     layersMap["Join result"] = processing.run("native:saveselectedfeatures", {'INPUT': shp, 'OUTPUT': 'memory:'})['OUTPUT']
+    
+    # Modify layer name from output to csvFilename
+    layerName = csvFilename.replace(".csv","")
+    layersMap["Join result"].setName(layerName)
+
     shp.removeSelection()
 
 # This method adapt retrieved region CSV in order to be abled to perform join
