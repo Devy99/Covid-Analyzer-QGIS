@@ -247,20 +247,6 @@ class CovidAnalyzer:
     def resetUi(self): 
         self.first_start = True
 
-    def confirm(self):
-
-        layerName = self.ui.layerComboBox.currentText()
-
-        global multiLayer
-
-        if (multiLayer == True):
-            if (layerName == 'Region layer'):
-                layer = QgsVectorLayer(REG_PATH, 'Province layer', "ogr")
-                QgsProject.instance().addMapLayer(layer)
-            elif (layerName == 'Province layer'):
-                layer = QgsVectorLayer(REG_PATH, 'Region layer', "ogr")
-                QgsProject.instance().addMapLayer(layer)
-
     def showCanvas(self):
         try:
             selectedDate = getCurrentDateFromUI(self)
