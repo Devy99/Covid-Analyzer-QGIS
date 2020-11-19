@@ -516,6 +516,9 @@ def downloadCsvByDate(self, date):
             raise Exception("Cannot retrieve any csv data at selected date")
     
         open(csvFile, 'wb').write(response.content)
+        
+        if selectedLayerName == 'Province layer':
+            calculateCasesVariation(self, csvFile)
     return fileName
 
 # This method perform table joins between a .shp file and a .csv file in their reg/prov code
@@ -532,8 +535,6 @@ def performTableJoin(self, csvFilename, layerType):
         csvField = 'denominazione_regione'
         shpField='DEN_REG'
     elif layerType == PROVINCE_LAYER:
-        calculateCasesVariation(self, csvFilepath)
-
         shp = layersMap['Province layer']
         csvField = 'sigla_provincia'
         shpField='SIGLA' 
