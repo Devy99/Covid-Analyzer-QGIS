@@ -320,9 +320,6 @@ class CovidAnalyzer:
             print("Layer failed to load!")
         
         performTableJoin(self, csvFilename, layerName)
-
-        # test = QgsVectorLayer(addDenominationToCsvField(THIS_FOLDER + "/csv_cache/"+ csvFilename), "csv", "delimitedtext")
-        # QgsProject.instance().addMapLayer(test)
         QgsProject.instance().addMapLayer(layersMap["Join result"])
 
         layer = layersMap["Join result"]
@@ -529,6 +526,8 @@ def fixDownloadedCsv(self, csvFilepath, layerName):
         fixRegionCsv(csvFilepath)
     elif layerName == 'Province layer':
         calculateCasesVariation(self, csvFilepath)
+    
+    addDenominationToCsvField(csvFilepath)
 
 # This method perform table joins between a .shp file and a .csv file in their reg/prov code
 def performTableJoin(self, csvFilename, layerType):
@@ -664,10 +663,5 @@ def addDenominationToCsvField(csvFilepath):
             csv.loc[i,"den_dimessi_guariti"] = csv.loc[i,"denominazione_regione"] + " " + str(csv.loc[i,"dimessi_guariti"])
             csv.loc[i,"den_deceduti"] = csv.loc[i,"denominazione_regione"] + " " + str(csv.loc[i,"deceduti"])
     
-    # Saving updated CSV in a temporary file
-    with tempfile.NamedTemporaryFile(mode='r+') as tempCsv:
-        tempCsvPath = tempCsv.name + '.csv'
-        csv.to_csv(tempCsvPath)
-        tempCsv.close()
-        QgsMessageLog.logMessage(tempCsv.name, 'MyPlugin', level=Qgis.Info)
-        return "file:///" + tempCsvPath
+    # Saving updated CSV
+    csv.to_csv(csvFilepath)
