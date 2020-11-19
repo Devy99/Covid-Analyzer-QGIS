@@ -261,9 +261,37 @@ class CovidAnalyzer:
                 layer = QgsVectorLayer(REG_PATH, 'Region layer', "ogr")
                 QgsProject.instance().addMapLayer(layer)
 
+    def showCanvas(self):
+        try:
+            selectedDate = getCurrentDateFromUI(self)
+            csvFilename = downloadCsvByDate(self, selectedDate)
+        except Exception as ex:
+            self.iface.messageBar().pushMessage("Error", str(ex), level=Qgis.Critical)
+            return None
 
+        canvas.setCanvasColor(Qt.white)
+        canvas.enableAntiAliasing(True)
+        canvas.move(50,50)
+        canvas.show()
 
-    def showLayout(self):
+        layerName = self.ui.layerComboBox.currentText()
+        layer = layersMap[layerName]
+        
+        if not layer.isValid():
+            print("Layer failed to load!")
+
+        performTableJoin(self, csvFilename, layerName)
+        QgsProject.instance().addMapLayer(layersMap["Join result"])
+
+        # set extent to the extent of our layer
+        canvas.setExtent(layer.extent())
+
+        # set the map canvas layer set
+        canvas.setLayers([layer])
+
+        self.showLabels()
+
+    """ def showLayout(self):
         try:
             selectedDate = getCurrentDateFromUI(self)
             csvFilename = downloadCsvByDate(self, selectedDate)
@@ -335,7 +363,7 @@ class CovidAnalyzer:
         title.attemptMove(QgsLayoutPoint(10, 5, QgsUnitTypes.LayoutMillimeters))
         
         layout = manager.layoutByName(layoutName)
-        self.iface.showLayoutManager()
+        self.iface.showLayoutManager() """
         
 
 
@@ -355,9 +383,8 @@ class CovidAnalyzer:
 
         # Widget signals
         self.ui.layerComboBox.currentIndexChanged.connect(lambda: updateInformationComboBox(self))
-        self.ui.previewButton.clicked.connect(self.showLayout)
+        self.ui.previewButton.clicked.connect(self.showCanvas)
         self.ui.rejected.connect(self.resetUi)
-        self.ui.confirmButton.clicked.connect(self.confirm)
 
         # Run the dialog event loop
         result = self.ui.exec_()
