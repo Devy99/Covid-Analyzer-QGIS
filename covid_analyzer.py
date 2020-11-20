@@ -71,6 +71,9 @@ prov_layer = QgsVectorLayer(PROV_PATH, "Province layer", "ogr")
 
 # Static declaration of layersMap
 layersMap = {"Province layer": prov_layer, "Region layer": reg_layer}
+typeMapRegion = {"Casi totali": "csv_den_totale_casi", "Casi quotidiani": "csv_den_nuovi_positivi", "Tamponi": "csv_den_tamponi",
+"Dimessi guariti": "csv_den_dimessi_guariti", "Deceduti": "csv_den_deceduti"}
+typeMapProvice = {"Casi totali": "csv_den_totale_casi", "Variazione casi": "csv_den_variazione"}
 
 # Layer type constants
 REGION_LAYER = "Region layer"
@@ -233,11 +236,16 @@ class CovidAnalyzer:
                 action)
             self.iface.removeToolBarIcon(action)
 
-    def showLabels(self):
-        layerName = self.ui.layerComboBox.currentText()
-        layer = layersMap[layerName]
+    def showLabels(self, layer):
+        layerAux = self.ui.layerComboBox.currentText()
+        if (layerAux == REGION_LAYER):
+            mapAux = typeMapRegion
+        elif (layerAux == PROVINCE_LAYER):
+            mapAux = typeMapProvice
+        
+        layerType = self.ui.typeComboBox.currentText()
         palLayer = QgsPalLayerSettings()
-        palLayer.fieldName = 'DEN_PROV'
+        palLayer.fieldName = mapAux[layerType]
         palLayer.enabled = True
         palLayer.placement = QgsPalLayerSettings.OverPoint
         labels = QgsVectorLayerSimpleLabeling(palLayer)
@@ -333,7 +341,7 @@ class CovidAnalyzer:
         # set the map canvas layer set
         canvas.setLayers([layer])
 
-        self.showLabels()
+        self.showLabels(layer)
 
     """ def showLayout(self):
         try:
