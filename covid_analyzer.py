@@ -765,7 +765,8 @@ class CovidAnalyzer:
         # set the map canvas layer set
         canvas.setLayers([layer])
 
-        self.showLabels(layer)
+        if (self.ui.labelCheckBox.isChecked()):
+            self.showLabels(layer)
 
     """ def showLayout(self):
         try:
