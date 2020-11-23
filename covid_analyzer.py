@@ -1014,7 +1014,7 @@ def fixRegionCsv(csvFilepath):
         csv.iloc[11,2]  = 4  # Change region code to 4
         csv.iloc[11,3]  = 'Trentino-Alto Adige'  # Change region name
 
-        for x in range(6, 21):  # Merging Bolzano and Trento rows
+        for x in range(6, 20):  # Merging Bolzano and Trento rows
             csv.iloc[11,x]  += csv.iloc[12,x]
 
         csv.drop(12,axis=0,inplace=True) # Drop Bolzano row
