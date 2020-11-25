@@ -271,11 +271,11 @@ class CovidAnalyzer:
         layer.setLabelsEnabled(True)
         layer.triggerRepaint()
 
-    def showGraduation(self, layer, csvFilepath):
+    def showGraduation(self, layer, csvUri):
         rangeList = []
         opacity = 1
 
-        df = pd.read_csv(csvFilepath)
+        df = pd.read_csv(csvUri)
 
         layerAux = self.ui.layerComboBox.currentText()
         if (layerAux == REGION_LAYER):
@@ -290,7 +290,7 @@ class CovidAnalyzer:
         elif (typeName == 'Casi totali'):
             targetField = 'csv_totale_casi'
         elif (typeName == 'Casi quotidiani'):
-            targetField == 'csv_nuovi_positivi'
+            targetField = 'csv_nuovi_positivi'
         elif (typeName == 'Dimessi guariti'):
             targetField = 'csv_dimessi_guariti'
         elif (typeName == 'Tamponi'):
@@ -577,7 +577,7 @@ class CovidAnalyzer:
                 rangeNeg1 = QgsRendererRange(minValNeg1, maxValNeg1, symbol1, labNeg1)
                 rangeList.append(rangeNeg1)
 
-                minValNeg2 = maxValNeg1
+                minValNeg2 = maxValNeg1 + 1
                 maxValNeg2 = 0
 
                 # range label
@@ -639,8 +639,11 @@ class CovidAnalyzer:
                 range3 = QgsRendererRange(minVal3, maxVal3, symbol5, lab3)
                 rangeList.append(range3)
             elif (d < -100):
+                
+                intervalNeg = math.ceil(d/3)
+
                 minValNeg1 = d
-                maxValNeg1 = math.ceil(d/3)
+                maxValNeg1 = intervalNeg*2
 
                 # range label
                 labNeg1 = str(minValNeg1) + ' - ' + str(maxValNeg1)
@@ -655,7 +658,7 @@ class CovidAnalyzer:
                 rangeList.append(rangeNeg1)
 
                 minValNeg2 = maxValNeg1 + 1
-                maxValNeg2 = math.ceil(maxValNeg1*2)
+                maxValNeg2 = math.ceil(intervalNeg)
 
                 # range label
                 labNeg2 = str(minValNeg2) + ' - ' + str(maxValNeg2)
@@ -730,6 +733,54 @@ class CovidAnalyzer:
                 #create range and append to rangeList
                 range3 = QgsRendererRange(minVal3, maxVal3, symbol6, lab3)
                 rangeList.append(range3)
+            elif (d >= 0):
+                minVal1 = 0
+
+                interval = p/3
+                maxVal1 = math.floor(interval)
+
+                # range label
+                lab1 = str(minVal1) + ' - ' + str(maxVal1)
+                
+                # create symbol and set properties
+                symbol1 = QgsSymbol.defaultSymbol(layer.geometryType())
+                symbol1.setColor(rangeColor1)
+                symbol1.setOpacity(opacity)
+                
+                #create range and append to rangeList
+                range1 = QgsRendererRange(minVal1, maxVal1, symbol1, lab1)
+                rangeList.append(range1)
+
+                minVal2 = maxVal1 + 1
+                maxVal2 = math.floor(interval*2)
+
+                # range label
+                lab2 = str(minVal2) + ' - ' + str(maxVal2)
+                
+                # create symbol and set properties
+                symbol2 = QgsSymbol.defaultSymbol(layer.geometryType())
+                symbol2.setColor(rangeColor2)
+                symbol2.setOpacity(opacity)
+                
+                #create range and append to rangeList
+                range2 = QgsRendererRange(minVal2, maxVal2, symbol2, lab2)
+                rangeList.append(range2)
+
+                minVal3 = maxVal2 + 1
+                maxVal3 = p
+
+                # range label
+                lab3 = str(minVal3) + ' - ' + str(maxVal3)
+                
+                # create symbol and set properties
+                symbol3 = QgsSymbol.defaultSymbol(layer.geometryType())
+                symbol3.setColor(rangeColor3)
+                symbol3.setOpacity(opacity)
+                
+                #create range and append to rangeList
+                range3 = QgsRendererRange(minVal3, maxVal3, symbol3, lab3)
+                rangeList.append(range3)
+
 
         # create the renderer
         groupRenderer = QgsGraduatedSymbolRenderer('', rangeList)
@@ -771,12 +822,12 @@ class CovidAnalyzer:
 
         csvUri = "file:///" + csvFilepath
 
-        layerToAdd = QgsVectorLayer(csvUri, 'TemporaryLayer', 'delimitedText')
+        layerToAdd = QgsVectorLayer(csvUri, 'TemporaryLayer', 'delimitedtext')
 
         layerToAdd = layersMap["Join result"]
 
         if (self.ui.graduatedCheckBox.isChecked()):
-            self.showGraduation(layerToAdd, csvFilepath)
+            self.showGraduation(layerToAdd, csvUri)
 
         # set extent to the extent of our layer
         canvas.setExtent(layerToAdd.extent())
