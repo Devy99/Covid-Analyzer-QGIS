@@ -82,6 +82,9 @@ typeMapProvice = {"Casi totali": "csv_den_totale_casi", "Variazione casi": "csv_
 typeMapRegionAux = {"Casi totali": "totale_casi", "Casi quotidiani": "nuovi_positivi", "Tamponi": "tamponi",
 "Dimessi guariti": "dimessi_guariti", "Deceduti": "deceduti"}
 typeMapProviceAux = {"Casi totali": "totale_casi", "Variazione casi": "variazione"}
+typeMapRegionAux2 = {"Casi totali": "csv_totale_casi", "Casi quotidiani": "csv_nuovi_positivi", "Tamponi": "csv_tamponi",
+"Dimessi guariti": "csv_dimessi_guariti", "Deceduti": "csv_deceduti"}
+typeMapProviceAux2 = {"Casi totali": "csv_totale_casi", "Variazione casi": "csv_variazione"}
 
 
 # Layer type constants
@@ -245,10 +248,19 @@ class CovidAnalyzer:
 
     def showLabels(self, layer):
         layerAux = self.ui.layerComboBox.currentText()
-        if (layerAux == REGION_LAYER):
-            mapAux = typeMapRegion
-        elif (layerAux == PROVINCE_LAYER):
-            mapAux = typeMapProvice
+        check = self.ui.labelCheckBox.isChecked()
+
+        if (check):
+            if (layerAux == REGION_LAYER):
+                mapAux = typeMapRegion
+            elif (layerAux == PROVINCE_LAYER):
+                mapAux = typeMapProvice
+        elif (not check):
+            QgsMessageLog.logMessage( 'funziona il check', 'MyPlugin', level=Qgis.Info)
+            if (layerAux == REGION_LAYER):
+                mapAux = typeMapRegionAux2
+            elif (layerAux == PROVINCE_LAYER):
+                mapAux = typeMapProviceAux2
         
         layerType = self.ui.typeComboBox.currentText()
         palLayer = QgsPalLayerSettings()
@@ -765,8 +777,7 @@ class CovidAnalyzer:
         # set the map canvas layer set
         canvas.setLayers([layer])
 
-        if (self.ui.labelCheckBox.isChecked()):
-            self.showLabels(layer)
+        self.showLabels(layer)
 
     """ def showLayout(self):
         try:
