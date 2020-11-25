@@ -256,7 +256,6 @@ class CovidAnalyzer:
             elif (layerAux == PROVINCE_LAYER):
                 mapAux = typeMapProvice
         elif (not check):
-            QgsMessageLog.logMessage( 'funziona il check', 'MyPlugin', level=Qgis.Info)
             if (layerAux == REGION_LAYER):
                 mapAux = typeMapRegionAux2
             elif (layerAux == PROVINCE_LAYER):
@@ -272,11 +271,11 @@ class CovidAnalyzer:
         layer.setLabelsEnabled(True)
         layer.triggerRepaint()
 
-    def showGraduation(self, layer, csvFilename):
+    def showGraduation(self, layer, csvFilepath):
         rangeList = []
         opacity = 1
 
-        df = pd.read_csv(THIS_FOLDER + '/csv_cache/' + csvFilename)
+        df = pd.read_csv(csvFilepath)
 
         layerAux = self.ui.layerComboBox.currentText()
         if (layerAux == REGION_LAYER):
@@ -652,7 +651,7 @@ class CovidAnalyzer:
                 symbol1.setOpacity(opacity)
                 
                 #create range and append to rangeList
-                rangeNeg1 = QgsRendererRange(minValNeg1, maxValNeg1, symbol1, labNeg)
+                rangeNeg1 = QgsRendererRange(minValNeg1, maxValNeg1, symbol1, labNeg1)
                 rangeList.append(rangeNeg1)
 
                 minValNeg2 = maxValNeg1 + 1
@@ -764,20 +763,28 @@ class CovidAnalyzer:
             print("Layer failed to load!")
         
         performTableJoin(self, csvFilename, layerName)
-        QgsProject.instance().addMapLayer(layersMap["Join result"])
+        #QgsProject.instance().addMapLayer(layersMap["Join result"])
 
-        layer = layersMap["Join result"]
+        relativeFilepath = 'csv_cache/' + csvFilename
+
+        csvFilepath = os.path.join(THIS_FOLDER, relativeFilepath)
+
+        csvUri = "file:///" + csvFilepath
+
+        layerToAdd = QgsVectorLayer(csvUri, 'TemporaryLayer', 'delimitedText')
+
+        layerToAdd = layersMap["Join result"]
 
         if (self.ui.graduatedCheckBox.isChecked()):
-            self.showGraduation(layer, csvFilename)
+            self.showGraduation(layerToAdd, csvFilepath)
 
         # set extent to the extent of our layer
-        canvas.setExtent(layer.extent())
+        canvas.setExtent(layerToAdd.extent())
 
         # set the map canvas layer set
-        canvas.setLayers([layer])
+        canvas.setLayers([layerToAdd])
 
-        self.showLabels(layer)
+        self.showLabels(layerToAdd)
 
     """ def showLayout(self):
         try:
