@@ -28,6 +28,8 @@ from qgis.PyQt.QtGui import QIcon, QColor, QFont
 from qgis.PyQt.QtWidgets import QAction, QProgressBar
 from qgis.core import *
 from PyQt5 import QtCore, QtGui
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
 
 from qgis.gui import (
     QgsMapCanvas,
@@ -51,6 +53,7 @@ import pandas as pd
 # Utility import
 import os.path
 import os
+import shutil
 import io
 import time
 import requests
@@ -800,6 +803,7 @@ class CovidAnalyzer:
             csvFilename = downloadCsvByDate(self, selectedDate)
         except Exception as ex:
             self.iface.messageBar().pushMessage("Error", str(ex), level=Qgis.Critical)
+            showPopup("error", str(ex), None, None)
             return None
 
         canvas.setCanvasColor(Qt.white)
@@ -843,6 +847,8 @@ class CovidAnalyzer:
             csvFilename = downloadCsvByDate(self, selectedDate)
         except Exception as ex:
             self.iface.messageBar().pushMessage("Error", str(ex), level=Qgis.Critical)
+            showPopup("error", str(ex), None, None)
+
             return None
 
         layerName = self.ui.layerComboBox.currentText()
@@ -961,11 +967,14 @@ class CovidAnalyzer:
 
         initComponentsGUI(self)
 
+
         # Widget signals
         self.ui.layerComboBox.currentIndexChanged.connect(lambda: updateInformationComboBox(self))
         self.ui.previewButton.clicked.connect(self.showCanvas)
         self.ui.rejected.connect(self.resetUi)
         self.ui.confirmButton.clicked.connect(self.confirm)
+        self.ui.cacheButton.clicked.connect(lambda: showPopup("warning", "Are you sure to clear cache files?", "Deleting cache you'll not be able to have access to downloaded files when offline.", clearCache))
+
 
         # Run the dialog event loop
         result = self.ui.exec_()
@@ -974,6 +983,7 @@ class CovidAnalyzer:
             # Do something useful here - delete the line containing pass and
             # substitute with your code.
             pass
+
 
 
 def initComponentsGUI(self):
@@ -988,6 +998,36 @@ def initComponentsGUI(self):
     # Init informations comboBox
     informationsList = ["Casi totali","Casi quotidiani","Tamponi","Dimessi guariti","Deceduti"]
     self.ui.typeComboBox.addItems(informationsList)
+
+def showPopup(type, message, informativeMessage, function):
+    msg = QMessageBox()
+    msg.setText(message)
+
+    if(informativeMessage):
+        msg.setInformativeText(informativeMessage)
+
+    if(type == "error"):
+        msg.setIcon(QMessageBox.Critical)
+        msg.setWindowTitle("Error")
+        msg.setStandardButtons(QMessageBox.Ok)
+        msg.exec_()
+    elif(type == "warning"):
+        msg.setIcon(QMessageBox.Warning)
+        msg.setWindowTitle("Warning")
+        msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+
+        returnValue = msg.exec_()
+        if returnValue == QtGui.QMessageBox.Ok:
+            function()
+            QgsMessageLog.logMessage( "Cliccato" , 'MyPlugin', level=Qgis.Info)
+
+def msgButtonClick(i):
+   print("Button clicked is:",i.text())
+
+def clearCache():
+    path = os.path.join(THIS_FOLDER, 'csv_cache/')
+    shutil.rmtree(path, ignore_errors=True, onerror=None)
+    os.makedirs(path)
 
 def updateInformationComboBox(self):
     # Clearing existing data
