@@ -837,6 +837,40 @@ class CovidAnalyzer:
 
         self.showLabels(layerToAdd)
 
+    def confirm(self):
+        try:
+            selectedDate = getCurrentDateFromUI(self)
+            csvFilename = downloadCsvByDate(self, selectedDate)
+        except Exception as ex:
+            self.iface.messageBar().pushMessage("Error", str(ex), level=Qgis.Critical)
+            return None
+
+        layerName = self.ui.layerComboBox.currentText()
+        layer = layersMap[layerName]
+        
+        if not layer.isValid():
+            print("Layer failed to load!")
+        
+        performTableJoin(self, csvFilename, layerName)
+        #QgsProject.instance().addMapLayer(layersMap["Join result"])
+
+        relativeFilepath = 'csv_cache/' + csvFilename
+
+        csvFilepath = os.path.join(THIS_FOLDER, relativeFilepath)
+
+        csvUri = "file:///" + csvFilepath
+
+        layerToAdd = QgsVectorLayer(csvUri, 'TemporaryLayer', 'delimitedtext')
+
+        layerToAdd = layersMap["Join result"]
+
+        if (self.ui.graduatedCheckBox.isChecked()):
+            self.showGraduation(layerToAdd, csvUri)
+
+        self.showLabels(layerToAdd)
+
+        QgsProject.instance().addMapLayer(layerToAdd)
+
     """ def showLayout(self):
         try:
             selectedDate = getCurrentDateFromUI(self)
@@ -931,6 +965,7 @@ class CovidAnalyzer:
         self.ui.layerComboBox.currentIndexChanged.connect(lambda: updateInformationComboBox(self))
         self.ui.previewButton.clicked.connect(self.showCanvas)
         self.ui.rejected.connect(self.resetUi)
+        self.ui.confirmButton.clicked.connect(self.confirm)
 
         # Run the dialog event loop
         result = self.ui.exec_()
