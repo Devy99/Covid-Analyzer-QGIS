@@ -274,33 +274,8 @@ class CovidAnalyzer:
         layer.setLabelsEnabled(True)
         layer.triggerRepaint()
 
-    def showGraduation(self, layer, csvUri):
-        rangeList = []
-        opacity = 1
+    def initColorScale(self, typeName, d):
 
-        df = pd.read_csv(csvUri)
-
-        layerAux = self.ui.layerComboBox.currentText()
-        if (layerAux == REGION_LAYER):
-            mapAux = typeMapRegionAux
-        elif (layerAux == PROVINCE_LAYER):
-            mapAux = typeMapProviceAux
-
-        typeName = self.ui.typeComboBox.currentText()
-
-        if (typeName == 'Deceduti'):
-            targetField = 'csv_deceduti'
-        elif (typeName == 'Casi totali'):
-            targetField = 'csv_totale_casi'
-        elif (typeName == 'Casi quotidiani'):
-            targetField = 'csv_nuovi_positivi'
-        elif (typeName == 'Dimessi guariti'):
-            targetField = 'csv_dimessi_guariti'
-        elif (typeName == 'Tamponi'):
-            targetField = 'csv_tamponi'
-        elif (typeName == 'Variazione casi'):
-            targetField = 'csv_variazione'
-        
         if (typeName == 'Deceduti' or typeName == 'Casi totali' or typeName == 'Casi quotidiani'):
             rangeColor1 = QtGui.QColor('#FFFEEF')
             rangeColor2 = QtGui.QColor('#EEDCD2')
@@ -335,455 +310,301 @@ class CovidAnalyzer:
             rangeColor9 = QtGui.QColor('#3667BC')
             rangeColor10 = QtGui.QColor('#2156B4')
         elif (typeName == 'Variazione casi'):
-            rangeColorNeg1 = QtGui.QColor('#ECF1F9')
-            rangeColorNeg2 = QtGui.QColor('#BECEE9')
-            rangeColorNeg3 = QtGui.QColor('#2156B4')
-            rangeColor1 = QtGui.QColor('#EEDCD2')
-            rangeColor2 = QtGui.QColor('#C48081')
-            rangeColor3 = QtGui.QColor('#A61022')
+            if (d < 0 and d >= -50):
+                rangeColorNeg1 = QtGui.QColor('#ECF1F9')
+                rangeColor1 = QtGui.QColor('#EEDCD2')
+                rangeColor2 = QtGui.QColor('#C48081')
+                rangeColor3 = QtGui.QColor('#A61022')
+            elif (d < -50 and d >= -100):
+                rangeColorNeg1 = QtGui.QColor('#ECF1F9')
+                rangeColorNeg2 = QtGui.QColor('#BECEE9')
+                rangeColor1 = QtGui.QColor('#EEDCD2')
+                rangeColor2 = QtGui.QColor('#C48081')
+                rangeColor3 = QtGui.QColor('#A61022')
+            elif (d < -100):
+                rangeColorNeg1 = QtGui.QColor('#ECF1F9')
+                rangeColorNeg2 = QtGui.QColor('#BECEE9')
+                rangeColorNeg3 = QtGui.QColor('#2156B4')
+                rangeColor1 = QtGui.QColor('#EEDCD2')
+                rangeColor2 = QtGui.QColor('#C48081')
+                rangeColor3 = QtGui.QColor('#A61022')
+            elif (d >= 0):
+                rangeColor1 = QtGui.QColor('#EEDCD2')
+                rangeColor2 = QtGui.QColor('#C48081')
+                rangeColor3 = QtGui.QColor('#A61022')
 
-        #FINDING MAX
+        if (typeName == 'Variazione casi'):
+            if (d < 0 and d >= -50):
+                rangeColorList = [rangeColorNeg1, rangeColor1, rangeColor2, rangeColor3]
+            elif (d < -50 and d >= -100):
+                rangeColorList = [rangeColorNeg1, rangeColorNeg2, rangeColor1, rangeColor2, rangeColor3]
+            elif (d < -100):
+                rangeColorList = [rangeColorNeg1, rangeColorNeg2, rangeColorNeg3, rangeColor1, rangeColor2, rangeColor3]
+            elif (d >= 0):
+                rangeColorList = [rangeColor1, rangeColor2, rangeColor3]
+        elif (typeName != 'Variazione casi'):
+            rangeColorList = [rangeColor1, rangeColor2, rangeColor3, rangeColor4, rangeColor5, 
+                              rangeColor6, rangeColor7, rangeColor8, rangeColor9, rangeColor10]
+
+        return rangeColorList
+
+        
+
+
+    def showGraduation(self, layer, csvUri):
+        rangeList = []
+        opacity = 1
+
+        df = pd.read_csv(csvUri)
+
+        layerAux = self.ui.layerComboBox.currentText()
+        if (layerAux == REGION_LAYER):
+            mapAux = typeMapRegionAux
+        elif (layerAux == PROVINCE_LAYER):
+            mapAux = typeMapProviceAux
+
+        typeName = self.ui.typeComboBox.currentText()
+
+        if (typeName == 'Deceduti'):
+            targetField = 'csv_deceduti'
+        elif (typeName == 'Casi totali'):
+            targetField = 'csv_totale_casi'
+        elif (typeName == 'Casi quotidiani'):
+            targetField = 'csv_nuovi_positivi'
+        elif (typeName == 'Dimessi guariti'):
+            targetField = 'csv_dimessi_guariti'
+        elif (typeName == 'Tamponi'):
+            targetField = 'csv_tamponi'
+        elif (typeName == 'Variazione casi'):
+            targetField = 'csv_variazione'
+
+        #FINDING MAX e MIN
         p = df[mapAux[typeName]].max()
         d = df[mapAux[typeName]].min()
 
+        rangeColorList = self.initColorScale(typeName, d)
+
         if (typeName != 'Variazione casi'):
+            
+            # Calcolate range interval for graduation scale
             interval = p/10
 
-            # define value ranges
-            minVal1 = 0.0
-            maxVal1 = math.floor(interval)
-            
-            # range label
-            lab1 = '0 - ' + str(maxVal1)
-            
-            # create symbol and set properties
+            # Static declaration of list that contains max value of each range
+            maxValList = [math.floor(interval), math.floor(interval*2), math.floor(interval*3), math.floor(interval*4), math.floor(interval*5),
+                          math.floor(interval*6), math.floor(interval*7), math.floor(interval*8), math.floor(interval*9), math.floor(interval*10)]
+
+            # Static declaration of list that contains min value of each range
+            minValList = [0.0, maxValList[0] +1, maxValList[1] +1, maxValList[2] +1, maxValList[3] +1,
+                          maxValList[4] +1, maxValList[5] +1, maxValList[6] +1, maxValList[7] +1, maxValList[8] +1]
+
+            # Static declaration of list that contains the string value of each range
+            labelList = ['0 - ' + str(maxValList[0]), str(minValList[1]) + ' - ' + str(maxValList[1]), str(minValList[2]) + ' - ' + str(maxValList[2]),
+                         str(minValList[3]) + ' - ' + str(maxValList[3]), str(minValList[4]) + ' - ' + str(maxValList[4]), str(minValList[5]) + ' - ' + str(maxValList[5]),
+                         str(minValList[6]) + ' - ' + str(maxValList[6]), str(minValList[7]) + ' - ' + str(maxValList[7]), str(minValList[8]) + ' - ' + str(maxValList[8]),
+                         str(minValList[9]) + ' - ' + str(maxValList[9])]
+
             symbol1 = QgsSymbol.defaultSymbol(layer.geometryType())
-            symbol1.setColor(rangeColor1)
-            symbol1.setOpacity(opacity)
-            
-            #create range and append to rangeList
-            range1 = QgsRendererRange(minVal1, maxVal1, symbol1, lab1)
-            rangeList.append(range1)
-
-            # define value ranges
-            minVal2 = maxVal1 + 1
-            maxVal2 = math.floor(interval*2)
-            
-            # range label
-            lab2 = str(minVal2) + ' - ' + str(maxVal2)
-            
-            # create symbol and set properties
             symbol2 = QgsSymbol.defaultSymbol(layer.geometryType())
-            symbol2.setColor(rangeColor2)
-            symbol2.setOpacity(opacity)
-            
-            #create range and append to rangeList
-            range2 = QgsRendererRange(minVal2, maxVal2, symbol2, lab2)
-            rangeList.append(range2)
-
-            # define value ranges
-            minVal3 = maxVal2 + 1
-            maxVal3 = math.floor(interval*3)
-            
-            # range label
-            lab3 = str(minVal3) + ' - ' + str(maxVal3)
-            
-            # create symbol and set properties
             symbol3 = QgsSymbol.defaultSymbol(layer.geometryType())
-            symbol3.setColor(rangeColor3)
-            symbol3.setOpacity(opacity)
-            
-            #create range and append to rangeList
-            range3 = QgsRendererRange(minVal3, maxVal3, symbol3, lab3)
-            rangeList.append(range3)
-
-            minVal4 = maxVal3 + 1
-            maxVal4 = math.floor(interval*4)
-            
-            # range label
-            lab4 = str(minVal4) + ' - ' + str(maxVal4)
-            
-            # create symbol and set properties
             symbol4 = QgsSymbol.defaultSymbol(layer.geometryType())
-            symbol4.setColor(rangeColor4)
-            symbol4.setOpacity(opacity)
-            
-            #create range and append to rangeList
-            range4 = QgsRendererRange(minVal4, maxVal4, symbol4, lab4)
-            rangeList.append(range4)
-
-            minVal5 = maxVal4 + 1
-            maxVal5 = math.floor(interval*5)
-            
-            # range label
-            lab5 = str(minVal5) + ' - ' + str(maxVal5)
-            
-            # create symbol and set properties
             symbol5 = QgsSymbol.defaultSymbol(layer.geometryType())
-            symbol5.setColor(rangeColor5)
-            symbol5.setOpacity(opacity)
-            
-            #create range and append to rangeList
-            range5 = QgsRendererRange(minVal5, maxVal5, symbol5, lab5)
-            rangeList.append(range5)
-
-            minVal6 = maxVal5 + 1
-            maxVal6 = math.floor(interval*6)
-            
-            # range label
-            lab6 = str(minVal6) + ' - ' + str(maxVal6)
-            
-            # create symbol and set properties
             symbol6 = QgsSymbol.defaultSymbol(layer.geometryType())
-            symbol6.setColor(rangeColor6)
-            symbol6.setOpacity(opacity)
-            
-            #create range and append to rangeList
-            range6 = QgsRendererRange(minVal6, maxVal6, symbol6, lab6)
-            rangeList.append(range6)
-
-            minVal7 = maxVal6 + 1
-            maxVal7 = math.floor(interval*7)
-            
-            # range label
-            lab7 = str(minVal7) + ' - ' + str(maxVal7)
-            
-            # create symbol and set properties
             symbol7 = QgsSymbol.defaultSymbol(layer.geometryType())
-            symbol7.setColor(rangeColor7)
-            symbol7.setOpacity(opacity)
-            
-            #create range and append to rangeList
-            range7 = QgsRendererRange(minVal7, maxVal7, symbol7, lab7)
-            rangeList.append(range7)
-
-            minVal8 = maxVal7 + 1
-            maxVal8 = math.floor(interval*8)
-            
-            # range label
-            lab8 = str(minVal8) + ' - ' + str(maxVal8)
-            
-            # create symbol and set properties
             symbol8 = QgsSymbol.defaultSymbol(layer.geometryType())
-            symbol8.setColor(rangeColor8)
-            symbol8.setOpacity(opacity)
-            
-            #create range and append to rangeList
-            range8 = QgsRendererRange(minVal8, maxVal8, symbol8, lab8)
-            rangeList.append(range8)
-
-            minVal9 = maxVal8 + 1
-            maxVal9 = math.floor(interval*9)
-            
-            # range label
-            lab9 = str(minVal9) + ' - ' + str(maxVal9)
-            
-            # create symbol and set properties
             symbol9 = QgsSymbol.defaultSymbol(layer.geometryType())
-            symbol9.setColor(rangeColor9)
-            symbol9.setOpacity(opacity)
-            
-            #create range and append to rangeList
-            range9 = QgsRendererRange(minVal9, maxVal9, symbol9, lab9)
-            rangeList.append(range9)
-
-            minVal10 = maxVal9 + 1
-            maxVal10 = math.floor(interval*10)
-            
-            # range label
-            lab10 = str(minVal10) + ' - ' + str(maxVal10)
-            
-            # create symbol and set properties
             symbol10 = QgsSymbol.defaultSymbol(layer.geometryType())
-            symbol10.setColor(rangeColor10)
-            symbol10.setOpacity(opacity)
+
+            symbolList = []
+            symbolList.append(symbol1)
+            symbolList.append(symbol2)
+            symbolList.append(symbol3)
+            symbolList.append(symbol4)
+            symbolList.append(symbol5)
+            symbolList.append(symbol6)
+            symbolList.append(symbol7)
+            symbolList.append(symbol8)
+            symbolList.append(symbol9)
+            symbolList.append(symbol10)
+
+            for i in range(0, 10):
+                symbolList[i].setColor(rangeColorList[i])
+                symbolList[i].setOpacity(opacity)
+
+            rangeList = []
+            range1 = QgsRendererRange(minValList[0], maxValList[0], symbolList[0], labelList[0])
+            range2 = QgsRendererRange(minValList[1], maxValList[1], symbolList[1], labelList[1])
+            range3 = QgsRendererRange(minValList[2], maxValList[2], symbolList[2], labelList[2])
+            range4 = QgsRendererRange(minValList[3], maxValList[3], symbolList[3], labelList[3])
+            range5 = QgsRendererRange(minValList[4], maxValList[4], symbolList[4], labelList[4])
+            range6 = QgsRendererRange(minValList[5], maxValList[5], symbolList[5], labelList[5])
+            range7 = QgsRendererRange(minValList[6], maxValList[6], symbolList[6], labelList[6])
+            range8 = QgsRendererRange(minValList[7], maxValList[7], symbolList[7], labelList[7])
+            range9 = QgsRendererRange(minValList[8], maxValList[8], symbolList[8], labelList[8])
+            range10 = QgsRendererRange(minValList[9], maxValList[9], symbolList[9], labelList[9])
             
-            #create range and append to rangeList
-            range10 = QgsRendererRange(minVal10, maxVal10, symbol10, lab10)
+            rangeList.append(range1)
+            rangeList.append(range2)
+            rangeList.append(range3)
+            rangeList.append(range4)
+            rangeList.append(range5)
+            rangeList.append(range6)
+            rangeList.append(range7)
+            rangeList.append(range8)
+            rangeList.append(range9)
             rangeList.append(range10)
+
         elif (typeName == 'Variazione casi'):
             if (d < 0 and d >= -50):
-                minValNeg1 = d
-                maxValNeg1 = 0
-
-                # range label
-                labNeg1 = str(minValNeg1) + ' - ' + str(maxValNeg1)
-                
-                # create symbol and set properties
-                symbol1 = QgsSymbol.defaultSymbol(layer.geometryType())
-                symbol1.setColor(rangeColorNeg1)
-                symbol1.setOpacity(opacity)
-                
-                #create range and append to rangeList
-                rangeNeg1 = QgsRendererRange(minValNeg1, maxValNeg1, symbol1, labNeg1)
-                rangeList.append(rangeNeg1)
-
-                minVal1 = 1
 
                 interval = p/3
-                maxVal1 = math.floor(interval)
-
-                # range label
-                lab1 = str(minVal1) + ' - ' + str(maxVal1)
                 
-                # create symbol and set properties
+                maxValList = [0, math.floor(interval), math.floor(interval*2), p]
+                minValList = [d, maxValList[0] + 1, maxValList[1] + 1, maxValList[2], + 1]
+                labelList = [str(minValList[0]) + ' - ' + str(maxValList[0]), str(minValList[1]) + ' - ' + str(maxValList[1]),
+                             str(minValList[2]) + ' - ' + str(maxValList[2]), str(minValList[3]) + ' - ' + str(maxValList[3])]
+
+
+                symbol1 = QgsSymbol.defaultSymbol(layer.geometryType())
                 symbol2 = QgsSymbol.defaultSymbol(layer.geometryType())
-                symbol2.setColor(rangeColor1)
-                symbol2.setOpacity(opacity)
-                
-                #create range and append to rangeList
-                range1 = QgsRendererRange(minVal1, maxVal1, symbol2, lab1)
-                rangeList.append(range1)
-
-                minVal2 = maxVal1 + 1
-                maxVal2 = math.floor(interval*2)
-
-                # range label
-                lab2 = str(minVal2) + ' - ' + str(maxVal2)
-                
-                # create symbol and set properties
                 symbol3 = QgsSymbol.defaultSymbol(layer.geometryType())
-                symbol3.setColor(rangeColor2)
-                symbol3.setOpacity(opacity)
-                
-                #create range and append to rangeList
-                range2 = QgsRendererRange(minVal2, maxVal2, symbol3, lab2)
-                rangeList.append(range2)
-
-                minVal3 = maxVal2 + 1
-                maxVal3 = p
-
-                # range label
-                lab3 = str(minVal3) + ' - ' + str(maxVal3)
-                
-                # create symbol and set properties
                 symbol4 = QgsSymbol.defaultSymbol(layer.geometryType())
-                symbol4.setColor(rangeColor3)
-                symbol4.setOpacity(opacity)
-                
-                #create range and append to rangeList
-                range3 = QgsRendererRange(minVal3, maxVal3, symbol4, lab3)
+
+                symbolList = []
+                symbolList.append(symbol1)
+                symbolList.append(symbol2)
+                symbolList.append(symbol3)
+                symbolList.append(symbol4)
+
+                for i in range(0, 4):
+                    symbolList[i].setColor(rangeColorList[i])
+                    symbolList[i].setOpacity(opacity)
+
+                rangeNeg1 = QgsRendererRange(minValList[0], maxValList[0], symbolList[0], labelList[0])
+                range1 = QgsRendererRange(minValList[1], maxValList[1], symbolList[1], labelList[1])
+                range2 = QgsRendererRange(minValList[2], maxValList[2], symbolList[2], labelList[2])
+                range3 = QgsRendererRange(minValList[3], maxValList[3], symbolList[3], labelList[3])
+
+                rangeList = []
+                rangeList.append(rangeNeg1)
+                rangeList.append(range1)
+                rangeList.append(range2)
                 rangeList.append(range3)
+
             elif (d < 0 and d >= -100):
-                minValNeg1 = d
-                maxValNeg1 = math.ceil(d/2)
-
-                # range label
-                labNeg1 = str(minValNeg1) + ' - ' + str(maxValNeg1)
-                
-                # create symbol and set properties
-                symbol1 = QgsSymbol.defaultSymbol(layer.geometryType())
-                symbol1.setColor(rangeColorNeg1)
-                symbol1.setOpacity(opacity)
-                
-                #create range and append to rangeList
-                rangeNeg1 = QgsRendererRange(minValNeg1, maxValNeg1, symbol1, labNeg1)
-                rangeList.append(rangeNeg1)
-
-                minValNeg2 = maxValNeg1 + 1
-                maxValNeg2 = 0
-
-                # range label
-                labNeg2 = str(minValNeg2) + ' - ' + str(maxValNeg2)
-                
-                # create symbol and set properties
-                symbol2 = QgsSymbol.defaultSymbol(layer.geometryType())
-                symbol2.setColor(rangeColorNeg2)
-                symbol2.setOpacity(opacity)
-                
-                #create range and append to rangeList
-                rangeNeg2 = QgsRendererRange(minValNeg2, maxValNeg2, symbol2, labNeg2)
-                rangeList.append(rangeNeg1)
-
-                minVal1 = 1
 
                 interval = p/3
-                maxVal1 = math.floor(interval)
 
-                # range label
-                lab1 = str(minVal1) + ' - ' + str(maxVal1)
-                
-                # create symbol and set properties
+                maxValList [math.ceil(d/2), 0, math.floor(interval), math.floor(interval*2), p]
+                minValList = [d, maxValList[0] + 1, maxValList[1] + 1, maxValList[2] + 1, maxValList[3] + 1]
+                labelList = [str(minValList[0]) + ' - ' + str(maxValList[0]), str(minValList[1]) + ' - ' + str(maxValList[1]),
+                             str(minValList[2]) + ' - ' + str(maxValList[2]), str(minValList[3]) + ' - ' + str(maxValList[3]),
+                             str(minValList[3]) + ' - ' + str(maxValList[3])]
+
+                symbol1 = QgsSymbol.defaultSymbol(layer.geometryType())
+                symbol2 = QgsSymbol.defaultSymbol(layer.geometryType())
                 symbol3 = QgsSymbol.defaultSymbol(layer.geometryType())
-                symbol3.setColor(rangeColor1)
-                symbol3.setOpacity(opacity)
-                
-                #create range and append to rangeList
-                range1 = QgsRendererRange(minVal1, maxVal1, symbol3, lab1)
-                rangeList.append(range1)
-
-                minVal2 = maxVal1 + 1
-                maxVal2 = math.floor(interval*2)
-
-                # range label
-                lab2 = str(minVal2) + ' - ' + str(maxVal2)
-                
-                # create symbol and set properties
                 symbol4 = QgsSymbol.defaultSymbol(layer.geometryType())
-                symbol4.setColor(rangeColor2)
-                symbol4.setOpacity(opacity)
-                
-                #create range and append to rangeList
-                range2 = QgsRendererRange(minVal2, maxVal2, symbol4, lab2)
-                rangeList.append(range2)
-
-                minVal3 = maxVal2 + 1
-                maxVal3 = p
-
-                # range label
-                lab3 = str(minVal3) + ' - ' + str(maxVal3)
-                
-                # create symbol and set properties
                 symbol5 = QgsSymbol.defaultSymbol(layer.geometryType())
-                symbol5.setColor(rangeColor3)
-                symbol5.setOpacity(opacity)
-                
-                #create range and append to rangeList
-                range3 = QgsRendererRange(minVal3, maxVal3, symbol5, lab3)
+
+                symbolList = []
+                symbolList.append(symbol1)
+                symbolList.append(symbol2)
+                symbolList.append(symbol3)
+                symbolList.append(symbol4)
+                symbolList.append(symbol5)
+
+                for i in range(0, 5):
+                    symbolList[i].setColor(rangeColorList[i])
+                    symbolList[i].setOpacity(opacity)
+
+                rangeNeg1 = QgsRendererRange(minValList[0], maxValList[0], symbolList[0], labelList[0])
+                rangeNeg2 = QgsRendererRange(minValList[1], maxValList[1], symbolList[1], labelList[1])
+                range1 = QgsRendererRange(minValList[2], maxValList[2], symbolList[2], labelList[2])
+                range2 = QgsRendererRange(minValList[3], maxValList[3], symbolList[3], labelList[3])
+                range3 = QgsRendererRange(minValList[4], maxValList[4], symbolList[4], labelList[4])
+
+                rangeList = []
+                rangeList.append(rangeNeg1)
+                rangeList.append(rangeNeg2)
+                rangeList.append(range1)
+                rangeList.append(range2)
                 rangeList.append(range3)
+
             elif (d < -100):
                 
                 intervalNeg = math.ceil(d/3)
-
-                minValNeg1 = d
-                maxValNeg1 = intervalNeg*2
-
-                # range label
-                labNeg1 = str(minValNeg1) + ' - ' + str(maxValNeg1)
-                
-                # create symbol and set properties
-                symbol1 = QgsSymbol.defaultSymbol(layer.geometryType())
-                symbol1.setColor(rangeColorNeg1)
-                symbol1.setOpacity(opacity)
-                
-                #create range and append to rangeList
-                rangeNeg1 = QgsRendererRange(minValNeg1, maxValNeg1, symbol1, labNeg1)
-                rangeList.append(rangeNeg1)
-
-                minValNeg2 = maxValNeg1 + 1
-                maxValNeg2 = math.ceil(intervalNeg)
-
-                # range label
-                labNeg2 = str(minValNeg2) + ' - ' + str(maxValNeg2)
-                
-                # create symbol and set properties
-                symbol2 = QgsSymbol.defaultSymbol(layer.geometryType())
-                symbol2.setColor(rangeColorNeg2)
-                symbol2.setOpacity(opacity)
-                
-                #create range and append to rangeList
-                rangeNeg2 = QgsRendererRange(minValNeg2, maxValNeg2, symbol2, labNeg2)
-                rangeList.append(rangeNeg2)
-
-                minValNeg3 = maxValNeg2 + 1
-                maxValNeg3 = 0
-
-                # range label
-                lab3 = str(minValNeg3) + ' - ' + str(maxValNeg3)
-                
-                # create symbol and set properties
-                symbol3 = QgsSymbol.defaultSymbol(layer.geometryType())
-                symbol3.setColor(rangeColorNeg3)
-                symbol3.setOpacity(opacity)
-                
-                #create range and append to rangeList
-                rangeNeg3 = QgsRendererRange(minValNeg3, maxValNeg3, symbol3, labNeg3)
-                rangeList.append(rangeNeg3)
-
-                minVal1 = 1
-
                 interval = p/3
-                maxVal1 = math.floor(interval)
 
-                # range label
-                lab1 = str(minVal1) + ' - ' + str(maxVal1)
-                
-                # create symbol and set properties
+                maxValList = [intervalNeg*2, math.ceil(intervalNeg), 0, math.floor(interval), math.floor(interval*2), p]
+                minValList = [d, maxValList[0] + 1, maxValList[1] + 1, maxValList[2] + 1, maxValList[3] + 1, maxValList[4] + 1]
+                labelList = [str(minValList[0]) + ' - ' + str(maxValList[0]), str(minValList[1]) + ' - ' + str(maxValList[1]),
+                             str(minValList[2]) + ' - ' + str(maxValList[2]), str(minValList[3]) + ' - ' + str(maxValList[3]),
+                             str(minValList[4]) + ' - ' + str(maxValList[4]), str(minValList[4]) + ' - ' + str(maxValList[4])]
+
+                symbol1 = QgsSymbol.defaultSymbol(layer.geometryType())
+                symbol2 = QgsSymbol.defaultSymbol(layer.geometryType())
+                symbol3 = QgsSymbol.defaultSymbol(layer.geometryType())
                 symbol4 = QgsSymbol.defaultSymbol(layer.geometryType())
-                symbol4.setColor(rangeColor1)
-                symbol4.setOpacity(opacity)
-                
-                #create range and append to rangeList
-                range1 = QgsRendererRange(minVal1, maxVal1, symbol4, lab1)
-                rangeList.append(range1)
-
-                minVal2 = maxVal1 + 1
-                maxVal2 = math.floor(interval*2)
-
-                # range label
-                lab2 = str(minVal2) + ' - ' + str(maxVal2)
-                
-                # create symbol and set properties
                 symbol5 = QgsSymbol.defaultSymbol(layer.geometryType())
-                symbol5.setColor(rangeColor2)
-                symbol5.setOpacity(opacity)
-                
-                #create range and append to rangeList
-                range2 = QgsRendererRange(minVal2, maxVal2, symbo5, lab2)
-                rangeList.append(range2)
-
-                minVal3 = maxVal2 + 1
-                maxVal3 = p
-
-                # range label
-                lab3 = str(minVal3) + ' - ' + str(maxVal3)
-                
-                # create symbol and set properties
                 symbol6 = QgsSymbol.defaultSymbol(layer.geometryType())
-                symbol6.setColor(rangeColor3)
-                symbol6.setOpacity(opacity)
-                
-                #create range and append to rangeList
-                range3 = QgsRendererRange(minVal3, maxVal3, symbol6, lab3)
+
+                symbolList = []
+                symbolList.append(symbol1)
+                symbolList.append(symbol2)
+                symbolList.append(symbol3)
+                symbolList.append(symbol4)
+                symbolList.append(symbol5)
+
+                for i in range(0, 6):
+                    symbolList[i].setColor(rangeColorList[i])
+                    symbolList[i].setOpacity(opacity)
+
+                rangeNeg1 = QgsRendererRange(minValList[0], maxValList[0], symbolList[0], labelList[0])
+                rangeNeg2 = QgsRendererRange(minValList[1], maxValList[1], symbolList[1], labelList[1])
+                rangeNeg3 = QgsRendererRange(minValList[2], maxValList[2], symbolList[2], labelList[2])
+                range1 = QgsRendererRange(minValList[3], maxValList[3], symbolList[3], labelList[3])
+                range2 = QgsRendererRange(minValList[4], maxValList[4], symbolList[4], labelList[4])
+                range3 = QgsRendererRange(minValList[5], maxValList[5], symbolList[5], labelList[5])
+
+                rangeList = []
+                rangeList.append(rangeNeg1)
+                rangeList.append(rangeNeg2)
+                rangeList.append(rangeNeg3)
+                rangeList.append(range1)
+                rangeList.append(range2)
                 rangeList.append(range3)
+
             elif (d >= 0):
-                minVal1 = 0
 
                 interval = p/3
-                maxVal1 = math.floor(interval)
 
-                # range label
-                lab1 = str(minVal1) + ' - ' + str(maxVal1)
+                maxValList = [math.floor(interval), math.floor(interval*2), p]
+                minValList = [0, maxValList[0] + 1, maxValList[1] + 1]
+                labelList = [str(minValList[0]) + ' - ' + str(maxValList[0]), str(minValList[1]) + ' - ' + str(maxValList[1]),
+                             str(minValList[2]) + ' - ' + str(maxValList[2])]
                 
-                # create symbol and set properties
                 symbol1 = QgsSymbol.defaultSymbol(layer.geometryType())
-                symbol1.setColor(rangeColor1)
-                symbol1.setOpacity(opacity)
-                
-                #create range and append to rangeList
-                range1 = QgsRendererRange(minVal1, maxVal1, symbol1, lab1)
-                rangeList.append(range1)
-
-                minVal2 = maxVal1 + 1
-                maxVal2 = math.floor(interval*2)
-
-                # range label
-                lab2 = str(minVal2) + ' - ' + str(maxVal2)
-                
-                # create symbol and set properties
                 symbol2 = QgsSymbol.defaultSymbol(layer.geometryType())
-                symbol2.setColor(rangeColor2)
-                symbol2.setOpacity(opacity)
-                
-                #create range and append to rangeList
-                range2 = QgsRendererRange(minVal2, maxVal2, symbol2, lab2)
-                rangeList.append(range2)
-
-                minVal3 = maxVal2 + 1
-                maxVal3 = p
-
-                # range label
-                lab3 = str(minVal3) + ' - ' + str(maxVal3)
-                
-                # create symbol and set properties
                 symbol3 = QgsSymbol.defaultSymbol(layer.geometryType())
-                symbol3.setColor(rangeColor3)
-                symbol3.setOpacity(opacity)
-                
-                #create range and append to rangeList
-                range3 = QgsRendererRange(minVal3, maxVal3, symbol3, lab3)
-                rangeList.append(range3)
 
+                symbolList = []
+                symbolList.append(symbol1)
+                symbolList.append(symbol2)
+                symbolList.append(symbol3)
+
+                range1 = QgsRendererRange(minValList[0], maxValList[0], symbolList[0], labelList[0])
+                range2 = QgsRendererRange(minValList[1], maxValList[1], symbolList[1], labelList[1])
+                range3 = QgsRendererRange(minValList[2], maxValList[2], symbolList[2], labelList[2])
+
+                for i in range(0, 3):
+                    symbolList[i].setColor(rangeColorList[i])
+                    symbolList[i].setOpacity(opacity)
+
+                rangeList = []
+
+                rangeList.append(range1)
+                rangeList.append(range2)
+                rangeList.append(range3)
 
         # create the renderer
         groupRenderer = QgsGraduatedSymbolRenderer('', rangeList)
