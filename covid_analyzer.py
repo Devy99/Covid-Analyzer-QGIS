@@ -348,8 +348,6 @@ class CovidAnalyzer:
 
         return rangeColorList
 
-        
-
 
     def showGraduation(self, layer, csvUri):
         rangeList = []
@@ -698,7 +696,10 @@ class CovidAnalyzer:
 
         QgsProject.instance().addMapLayer(layerToAdd)
 
-    """ def showLayout(self):
+    def showLayout(self):
+
+        QgsProject.instance().removeAllMapLayers()
+
         try:
             selectedDate = getCurrentDateFromUI(self)
             csvFilename = downloadCsvByDate(self, selectedDate)
@@ -707,25 +708,31 @@ class CovidAnalyzer:
             return None
 
         layerName = self.ui.layerComboBox.currentText()
-        layer = QgsVectorLayer(REG_PATH, layerName, "ogr")
+        layer = layersMap[layerName]
+        typeName = self.ui.typeComboBox.currentText()
+        
+        if not layer.isValid():
+            print("Layer failed to load!")
+        
+        performTableJoin(self, csvFilename, layerName)
+        #QgsProject.instance().addMapLayer(layersMap["Join result"])
 
-        prova = QgsProject.instance().count()
- 
-        QgsProject.instance().addMapLayer(layer)
+        relativeFilepath = 'csv_cache/' + csvFilename
 
-        for layer in self.iface.mapCanvas().layers():
-            if (layerName != layer.name()):
-                QgsMessageLog.logMessage( 'entrato', 'MyPlugin', level=Qgis.Info)
-                global multiLayer
-                multiLayer = True
-                QgsMessageLog.logMessage( str(multiLayer), 'MyPlugin', level=Qgis.Info)
+        csvFilepath = os.path.join(THIS_FOLDER, relativeFilepath)
 
-        if (QgsProject.instance().count() >= 2):
-            ara = QgsProject.instance().count()
-            QgsProject.instance().removeAllMapLayers()
-            layer = QgsVectorLayer(REG_PATH, layerName, "ogr")
-            QgsProject.instance().addMapLayer(layer)
+        csvUri = "file:///" + csvFilepath
 
+        layerToAdd = QgsVectorLayer(csvUri, 'TemporaryLayer', 'delimitedtext')
+
+        layerToAdd = layersMap["Join result"]
+
+        if (self.ui.graduatedCheckBox.isChecked()):
+            self.showGraduation(layerToAdd, csvUri)
+
+        self.showLabels(layerToAdd)
+
+        QgsProject.instance().addMapLayer(layerToAdd)
 
         project = QgsProject.instance()
         manager = project.layoutManager()
@@ -746,7 +753,7 @@ class CovidAnalyzer:
         
         # set the map extent
         ms = QgsMapSettings()
-        ms.setLayers([prov_layer]) # set layers to be mapped
+        ms.setLayers([layerToAdd]) # set layers to be mapped
         rect = QgsRectangle(ms.fullExtent())
         rect.scale(1.5)
         ms.setExtent(rect)
@@ -756,24 +763,22 @@ class CovidAnalyzer:
         
         map.attemptMove(QgsLayoutPoint(5, 20, QgsUnitTypes.LayoutMillimeters))
         map.attemptResize(QgsLayoutSize(180, 180, QgsUnitTypes.LayoutMillimeters))
-        
+
         legend = QgsLayoutItemLegend(layout)
         legend.setTitle("Legend")
         layout.addLayoutItem(legend)
         legend.attemptMove(QgsLayoutPoint(230, 15, QgsUnitTypes.LayoutMillimeters))
         
         title = QgsLayoutItemLabel(layout)
-        title.setText("My Title")
+        title.setText(layerToAdd.name() + " "  + typeName)
         title.setFont(QFont('Arial', 24))
         title.adjustSizeToText()
         layout.addLayoutItem(title)
         title.attemptMove(QgsLayoutPoint(10, 5, QgsUnitTypes.LayoutMillimeters))
         
         layout = manager.layoutByName(layoutName)
-        self.iface.showLayoutManager() """
+        self.iface.showLayoutManager()
         
-
-
     def run(self):
         """Run method that performs all the real work"""
 
