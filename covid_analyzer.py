@@ -772,7 +772,7 @@ class CovidAnalyzer:
         ms = QgsMapSettings()
         ms.setLayers([layerToAdd]) # set layers to be mapped
         rect = QgsRectangle(ms.fullExtent())
-        rect.scale(1.5)
+        rect.scale(1.0)
         ms.setExtent(rect)
         map.setExtent(rect)
         map.setBackgroundColor(QColor(255, 255, 255, 0))
@@ -788,10 +788,10 @@ class CovidAnalyzer:
         
         title = QgsLayoutItemLabel(layout)
         title.setText(layerToAdd.name() + " "  + typeName)
-        title.setFont(QFont('Arial', 24))
+        title.setFont(QFont('Arial', 20))
         title.adjustSizeToText()
         layout.addLayoutItem(title)
-        title.attemptMove(QgsLayoutPoint(10, 5, QgsUnitTypes.LayoutMillimeters))
+        title.attemptMove(QgsLayoutPoint(90, 1, QgsUnitTypes.LayoutMillimeters))
         
         layout = manager.layoutByName(layoutName)
         self.iface.showLayoutManager()
