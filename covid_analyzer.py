@@ -30,6 +30,7 @@ from qgis.core import *
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
+from PyQt5.QtWidgets import QFileDialog
 
 from qgis.gui import (
     QgsMapCanvas,
@@ -661,40 +662,56 @@ class CovidAnalyzer:
         self.showLabels(layerToAdd)
 
     def confirm(self):
-        try:
-            selectedDate = getCurrentDateFromUI(self)
-            csvFilename = downloadCsvByDate(self, selectedDate)
-        except Exception as ex:
-            self.iface.messageBar().pushMessage("Error", str(ex), level=Qgis.Critical)
-            showPopup("error", str(ex), None, None)
 
-            return None
+        if (self.ui.pdfCheckBox.isChecked()):
+            self.showLayout()
+        else:
+            try:
+                selectedDate = getCurrentDateFromUI(self)
+                csvFilename = downloadCsvByDate(self, selectedDate)
+            except Exception as ex:
+                self.iface.messageBar().pushMessage("Error", str(ex), level=Qgis.Critical)
+                showPopup("error", str(ex), None, None)
 
-        layerName = self.ui.layerComboBox.currentText()
-        layer = layersMap[layerName]
-        
-        if not layer.isValid():
-            print("Layer failed to load!")
-        
-        performTableJoin(self, csvFilename, layerName)
-        #QgsProject.instance().addMapLayer(layersMap["Join result"])
+                return None
 
-        relativeFilepath = 'csv_cache/' + csvFilename
+            layerName = self.ui.layerComboBox.currentText()
+            layer = layersMap[layerName]
+            
+            if not layer.isValid():
+                print("Layer failed to load!")
+            
+            performTableJoin(self, csvFilename, layerName)
+            #QgsProject.instance().addMapLayer(layersMap["Join result"])
 
-        csvFilepath = os.path.join(THIS_FOLDER, relativeFilepath)
+            relativeFilepath = 'csv_cache/' + csvFilename
 
-        csvUri = "file:///" + csvFilepath
+            csvFilepath = os.path.join(THIS_FOLDER, relativeFilepath)
 
-        layerToAdd = QgsVectorLayer(csvUri, 'TemporaryLayer', 'delimitedtext')
+            csvUri = "file:///" + csvFilepath
 
-        layerToAdd = layersMap["Join result"]
+            layerToAdd = QgsVectorLayer(csvUri, 'TemporaryLayer', 'delimitedtext')
 
-        if (self.ui.graduatedCheckBox.isChecked()):
-            self.showGraduation(layerToAdd, csvUri)
+            layerToAdd = layersMap["Join result"]
 
-        self.showLabels(layerToAdd)
+            if (self.ui.graduatedCheckBox.isChecked()):
+                self.showGraduation(layerToAdd, csvUri)
 
-        QgsProject.instance().addMapLayer(layerToAdd)
+            self.showLabels(layerToAdd)
+
+            QgsProject.instance().addMapLayer(layerToAdd)
+
+    def exportPdf(self, layer, typeName, layout):
+
+        fd = QFileDialog()
+        fd.setOption(QFileDialog.ShowDirsOnly, True)
+        options = fd.options()
+        result = fd.getExistingDirectory(parent=None, caption="Save File", directory="", options=options)
+
+        if (result != None):
+            fn = result + '/' + layer.name() + typeName + ".pdf"
+            exporter = QgsLayoutExporter(layout)
+            exporter.exportToPdf(fn, QgsLayoutExporter.PdfExportSettings())
 
     def showLayout(self):
 
@@ -778,6 +795,10 @@ class CovidAnalyzer:
         
         layout = manager.layoutByName(layoutName)
         self.iface.showLayoutManager()
+
+        self.exportPdf(layerToAdd, typeName, layout)
+
+        
         
     def run(self):
         """Run method that performs all the real work"""
