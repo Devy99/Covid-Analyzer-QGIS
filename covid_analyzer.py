@@ -779,7 +779,7 @@ class CovidAnalyzer:
         ms = QgsMapSettings()
         ms.setLayers([layerToAdd]) # set layers to be mapped
         rect = QgsRectangle(ms.fullExtent())
-        rect.scale(1.0)
+        rect.scale(1.5)
         ms.setExtent(rect)
         map.setExtent(rect)
         map.setBackgroundColor(QColor(255, 255, 255, 0))
@@ -794,7 +794,13 @@ class CovidAnalyzer:
         legend.attemptMove(QgsLayoutPoint(230, 15, QgsUnitTypes.LayoutMillimeters))
         
         title = QgsLayoutItemLabel(layout)
-        title.setText(layerToAdd.name() + " "  + typeName)
+
+        if csvFilename[:3] == "Reg":
+           layer_type = "Regioni"
+        elif csvFilename[:4] == "Prov":
+            layer_type = "Province"
+
+        title.setText(typeName + "  " + layer_type + "  " +  str(selectedDate))
         title.setFont(QFont('Arial', 20))
         title.adjustSizeToText()
         layout.addLayoutItem(title)
