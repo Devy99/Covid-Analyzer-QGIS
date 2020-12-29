@@ -682,7 +682,6 @@ class CovidAnalyzer:
                 print("Layer failed to load!")
             
             performTableJoin(self, csvFilename, layerName)
-            #QgsProject.instance().addMapLayer(layersMap["Join result"])
 
             relativeFilepath = 'csv_cache/' + csvFilename
 
@@ -700,6 +699,9 @@ class CovidAnalyzer:
             self.showLabels(layerToAdd)
 
             QgsProject.instance().addMapLayer(layerToAdd)
+
+            # Close Plugin window
+            self.ui.close()
 
     def exportPdf(self, layer, typeName, layout):
 
