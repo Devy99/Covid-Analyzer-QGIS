@@ -934,10 +934,10 @@ def downloadCsvByDate(self, date):
         try:
             response = requests.get(url, timeout=10)
         except:
-            raise Exception("Request rejected. Check your internet connection")
+            raise Exception("Richiesta rifiutata. Controlla la tua connessione Internet.")
 
         if response.status_code == 404:
-            raise Exception("Cannot retrieve any csv data at selected date")
+            raise Exception("Impossibile recuperare le informazioni alla data selezionata.")
     
         open(csvFilepath, 'wb').write(response.content)
         

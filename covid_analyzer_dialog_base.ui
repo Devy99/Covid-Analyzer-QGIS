@@ -39,7 +39,7 @@
   <widget class="QPushButton" name="previewButton">
    <property name="geometry">
     <rect>
-     <x>90</x>
+     <x>100</x>
      <y>390</y>
      <width>71</width>
      <height>21</height>
@@ -210,12 +210,12 @@
     <rect>
      <x>10</x>
      <y>390</y>
-     <width>71</width>
+     <width>80</width>
      <height>21</height>
     </rect>
    </property>
    <property name="text">
-    <string>Clear cache</string>
+    <string>Svuota cache</string>
    </property>
    <property name="icon">
     <iconset>
