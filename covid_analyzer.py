@@ -670,7 +670,7 @@ class CovidAnalyzer:
                 selectedDate = getCurrentDateFromUI(self)
                 csvFilename = downloadCsvByDate(self, selectedDate)
             except Exception as ex:
-                self.iface.messageBar().pushMessage("Error", str(ex), level=Qgis.Critical)
+                self.iface.messageBar().pushMessage("Errore", str(ex), level=Qgis.Critical)
                 showPopup("error", str(ex), None, None)
 
                 return None
@@ -822,7 +822,7 @@ class CovidAnalyzer:
         self.ui.previewButton.clicked.connect(self.showCanvas)
         self.ui.rejected.connect(self.resetUi)
         self.ui.confirmButton.clicked.connect(self.confirm)
-        self.ui.cacheButton.clicked.connect(lambda: showPopup("warning", "Are you sure to clear cache files?", "Deleting cache you'll not be able to have access to downloaded files when offline.", clearCache))
+        self.ui.cacheButton.clicked.connect(lambda: showPopup("warning", "Sei sicuro di voler svuotare la cache?", "Cancellando la cache non sarai in grado di recuperare i dati scaricati in precedenza in modalità offline.", clearCache))
 
 
         # Run the dialog event loop
@@ -857,12 +857,12 @@ def showPopup(type, message, informativeMessage, function):
 
     if(type == "error"):
         msg.setIcon(QMessageBox.Critical)
-        msg.setWindowTitle("Error")
+        msg.setWindowTitle("Errore")
         msg.setStandardButtons(QMessageBox.Ok)
         msg.exec_()
     elif(type == "warning"):
         msg.setIcon(QMessageBox.Warning)
-        msg.setWindowTitle("Warning")
+        msg.setWindowTitle("Attenzione")
         msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
 
         returnValue = msg.exec_()
