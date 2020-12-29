@@ -623,7 +623,7 @@ class CovidAnalyzer:
             csvFilename = downloadCsvByDate(self, selectedDate)
         except Exception as ex:
             self.iface.messageBar().pushMessage("Error", str(ex), level=Qgis.Critical)
-            showPopup("error", str(ex), None, None)
+            showPopup("error", str(ex), None, None, None)
             return None
 
         canvas.setCanvasColor(Qt.white)
@@ -671,7 +671,7 @@ class CovidAnalyzer:
                 csvFilename = downloadCsvByDate(self, selectedDate)
             except Exception as ex:
                 self.iface.messageBar().pushMessage("Errore", str(ex), level=Qgis.Critical)
-                showPopup("error", str(ex), None, None)
+                showPopup("error", str(ex), None, None, None)
 
                 return None
 
@@ -700,8 +700,10 @@ class CovidAnalyzer:
 
             QgsProject.instance().addMapLayer(layerToAdd)
 
-            # Close Plugin window
-            self.ui.close()
+        # Close Plugin window
+        self.ui.close()
+
+    
 
     def exportPdf(self, layer, typeName, layout):
 
@@ -714,6 +716,9 @@ class CovidAnalyzer:
             fn = result + '/' + layer.name() + typeName + ".pdf"
             exporter = QgsLayoutExporter(layout)
             exporter.exportToPdf(fn, QgsLayoutExporter.PdfExportSettings())
+    
+    def setPdfCheckBoxFalse(self):
+        self.ui.pdfCheckBox.setChecked(False)
 
     def showLayout(self):
 
@@ -796,11 +801,10 @@ class CovidAnalyzer:
         title.attemptMove(QgsLayoutPoint(90, 1, QgsUnitTypes.LayoutMillimeters))
         
         layout = manager.layoutByName(layoutName)
-        self.iface.showLayoutManager()
+        # self.iface.showLayoutManager()
 
         self.exportPdf(layerToAdd, typeName, layout)
 
-        
         
     def run(self):
         """Run method that performs all the real work"""
@@ -819,11 +823,11 @@ class CovidAnalyzer:
 
         # Widget signals
         self.ui.layerComboBox.currentIndexChanged.connect(lambda: updateInformationComboBox(self))
+        self.ui.pdfCheckBox.clicked.connect(lambda: handlePdfCheckBox(self))
         self.ui.previewButton.clicked.connect(self.showCanvas)
         self.ui.rejected.connect(self.resetUi)
         self.ui.confirmButton.clicked.connect(self.confirm)
-        self.ui.cacheButton.clicked.connect(lambda: showPopup("warning", "Sei sicuro di voler svuotare la cache?", "Cancellando la cache non sarai in grado di recuperare i dati scaricati in precedenza in modalità offline.", clearCache))
-
+        self.ui.cacheButton.clicked.connect(lambda: showPopup("warning", "Sei sicuro di voler svuotare la cache?", "Cancellando la cache non sarai in grado di recuperare i dati scaricati in precedenza in modalità offline.", clearCache, None))
 
         # Run the dialog event loop
         result = self.ui.exec_()
@@ -832,8 +836,6 @@ class CovidAnalyzer:
             # Do something useful here - delete the line containing pass and
             # substitute with your code.
             pass
-
-
 
 def initComponentsGUI(self):
     # Clearing existing data
@@ -848,7 +850,7 @@ def initComponentsGUI(self):
     informationsList = ["Casi totali","Casi quotidiani","Tamponi","Dimessi guariti","Deceduti"]
     self.ui.typeComboBox.addItems(informationsList)
 
-def showPopup(type, message, informativeMessage, function):
+def showPopup(type, message, informativeMessage, okFunction, cancelFunction ):
     msg = QMessageBox()
     msg.setText(message)
 
@@ -866,12 +868,16 @@ def showPopup(type, message, informativeMessage, function):
         msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
 
         returnValue = msg.exec_()
-        if returnValue == QtGui.QMessageBox.Ok:
-            function()
-            QgsMessageLog.logMessage( "Cliccato" , 'MyPlugin', level=Qgis.Info)
+        if returnValue == QtGui.QMessageBox.Ok and okFunction != None:
+            okFunction()
+            QgsMessageLog.logMessage( "Ok cliccato" , 'MyPlugin', level=Qgis.Info)
+        elif returnValue == QtGui.QMessageBox.Cancel and cancelFunction != None:
+            cancelFunction()
+            QgsMessageLog.logMessage( "Cancel cliccato" , 'MyPlugin', level=Qgis.Info)
 
 def msgButtonClick(i):
    print("Button clicked is:",i.text())
+
 
 def clearCache():
     path = os.path.join(THIS_FOLDER, 'csv_cache/')
@@ -891,6 +897,12 @@ def updateInformationComboBox(self):
     elif  selectedLayerName == "Province layer":
         informationsList = ["Casi totali","Variazione casi"]
     self.ui.typeComboBox.addItems(informationsList)
+
+
+def handlePdfCheckBox(self):
+    if self.ui.pdfCheckBox.isChecked():
+        showPopup("warning", "Hai selezionato 'Esporta PDF'.", "Esportando il file come PDF verranno eliminati i file nella tua Table of Content. Continuare?", None, self.setPdfCheckBoxFalse)
+
 
 def getCurrentDateFromUI(self):
     # Get data from UI
