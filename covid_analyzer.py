@@ -81,13 +81,18 @@ layersMap = {"Province layer": prov_layer, "Region layer": reg_layer}
 
 # Static declaration of Maps that contains the value in a typeComboBox
 typeMapRegion = {"Casi totali": "csv_den_totale_casi", "Casi quotidiani": "csv_den_nuovi_positivi", "Tamponi": "csv_den_tamponi",
-"Dimessi guariti": "csv_den_dimessi_guariti", "Deceduti": "csv_den_deceduti"}
+                 "Dimessi guariti": "csv_den_dimessi_guariti", "Deceduti": "csv_den_deceduti"}
+
 typeMapProvice = {"Casi totali": "csv_den_totale_casi", "Variazione casi": "csv_den_variazione"}
+
 typeMapRegionAux = {"Casi totali": "totale_casi", "Casi quotidiani": "nuovi_positivi", "Tamponi": "tamponi",
-"Dimessi guariti": "dimessi_guariti", "Deceduti": "deceduti"}
+                    "Dimessi guariti": "dimessi_guariti", "Deceduti": "deceduti"}
+
 typeMapProviceAux = {"Casi totali": "totale_casi", "Variazione casi": "variazione"}
+
 typeMapRegionAux2 = {"Casi totali": "csv_totale_casi", "Casi quotidiani": "csv_nuovi_positivi", "Tamponi": "csv_tamponi",
-"Dimessi guariti": "csv_dimessi_guariti", "Deceduti": "csv_deceduti"}
+                     "Dimessi guariti": "csv_dimessi_guariti", "Deceduti": "csv_deceduti"}
+
 typeMapProviceAux2 = {"Casi totali": "csv_totale_casi", "Variazione casi": "csv_variazione"}
 
 
@@ -638,16 +643,11 @@ class CovidAnalyzer:
             print("Layer failed to load!")
         
         performTableJoin(self, csvFilename, layerName)
-        #QgsProject.instance().addMapLayer(layersMap["Join result"])
-
         relativeFilepath = 'csv_cache/' + csvFilename
-
         csvFilepath = os.path.join(THIS_FOLDER, relativeFilepath)
-
         csvUri = "file:///" + csvFilepath
 
         layerToAdd = QgsVectorLayer(csvUri, 'TemporaryLayer', 'delimitedtext')
-
         layerToAdd = layersMap["Join result"]
 
         if (self.ui.graduatedCheckBox.isChecked()):
@@ -682,15 +682,11 @@ class CovidAnalyzer:
                 print("Layer failed to load!")
             
             performTableJoin(self, csvFilename, layerName)
-
             relativeFilepath = 'csv_cache/' + csvFilename
-
             csvFilepath = os.path.join(THIS_FOLDER, relativeFilepath)
-
             csvUri = "file:///" + csvFilepath
 
             layerToAdd = QgsVectorLayer(csvUri, 'TemporaryLayer', 'delimitedtext')
-
             layerToAdd = layersMap["Join result"]
 
             if (self.ui.graduatedCheckBox.isChecked()):
@@ -702,8 +698,6 @@ class CovidAnalyzer:
 
         # Close Plugin window
         self.ui.close()
-
-    
 
     def exportPdf(self, layer, typeName, layout):
 
@@ -739,16 +733,11 @@ class CovidAnalyzer:
             print("Layer failed to load!")
         
         performTableJoin(self, csvFilename, layerName)
-        #QgsProject.instance().addMapLayer(layersMap["Join result"])
-
         relativeFilepath = 'csv_cache/' + csvFilename
-
         csvFilepath = os.path.join(THIS_FOLDER, relativeFilepath)
-
         csvUri = "file:///" + csvFilepath
 
         layerToAdd = QgsVectorLayer(csvUri, 'TemporaryLayer', 'delimitedtext')
-
         layerToAdd = layersMap["Join result"]
 
         if (self.ui.graduatedCheckBox.isChecked()):
@@ -807,7 +796,6 @@ class CovidAnalyzer:
         title.attemptMove(QgsLayoutPoint(90, 1, QgsUnitTypes.LayoutMillimeters))
         
         layout = manager.layoutByName(layoutName)
-        # self.iface.showLayoutManager()
 
         self.exportPdf(layerToAdd, typeName, layout)
 
@@ -842,6 +830,10 @@ class CovidAnalyzer:
             # Do something useful here - delete the line containing pass and
             # substitute with your code.
             pass
+
+###################################### UTILS METHODS ######################################
+
+#################### GUI METHODS ####################
 
 def initComponentsGUI(self):
     # Clearing existing data
@@ -881,10 +873,6 @@ def showPopup(type, message, informativeMessage, okFunction, cancelFunction ):
             cancelFunction()
             QgsMessageLog.logMessage( "Cancel cliccato" , 'MyPlugin', level=Qgis.Info)
 
-def msgButtonClick(i):
-   print("Button clicked is:",i.text())
-
-
 def clearCache():
     path = os.path.join(THIS_FOLDER, 'csv_cache/')
     shutil.rmtree(path, ignore_errors=True, onerror=None)
@@ -909,6 +897,9 @@ def handlePdfCheckBox(self):
     if self.ui.pdfCheckBox.isChecked():
         showPopup("warning", "Hai selezionato 'Esporta PDF'.", "Esportando il file come PDF verranno eliminati i file nella tua Table of Content. Continuare?", None, self.setPdfCheckBoxFalse)
 
+#####################################################
+
+#################### DATE METHODS ###################
 
 def getCurrentDateFromUI(self):
     # Get data from UI
@@ -924,6 +915,9 @@ def getPreviousDateFromUI(self):
     previousDate = currentDate - timedelta(days = 1)
     return previousDate
 
+#####################################################
+
+#################### CSV METHODS ####################
 
 # This method takes as parameter the Date of csv to download and return the filename in output
 def downloadCsvByDate(self, date):
@@ -963,7 +957,6 @@ def downloadCsvByDate(self, date):
         
     return fileName
 
-
 def fixDownloadedCsv(self, csvFilepath, layerName):
     # Fixing downloaded csv
     if layerName == 'Region layer':
@@ -995,8 +988,6 @@ def performTableJoin(self, csvFilename, layerType):
     joinObject.setJoinFieldName(csvField)
     joinObject.setTargetFieldName(shpField)
     joinObject.setJoinLayerId(csv.id())
-    #QgsProject.instance().addMapLayer(shp)
-    #QgsProject.instance().addMapLayer(csv)
     
     joinObject.setUsingMemoryCache(True)
     joinObject.setJoinLayer(csv)
@@ -1109,3 +1100,5 @@ def addDenominationToCsvField(csvFilepath):
     
     # Saving updated CSV
     csv.to_csv(csvFilepath)
+
+#####################################################
