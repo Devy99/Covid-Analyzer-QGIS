@@ -25,7 +25,7 @@
 # Qgis library
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtGui import QIcon, QColor, QFont
-from qgis.PyQt.QtWidgets import QAction, QProgressBar
+from qgis.PyQt.QtWidgets import QAction, QProgressBar, QMessageBox
 from qgis.core import *
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtGui import *
