@@ -866,10 +866,10 @@ def showPopup(type, message, informativeMessage, okFunction, cancelFunction ):
         msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
 
         returnValue = msg.exec_()
-        if returnValue == QtGui.QMessageBox.Ok and okFunction != None:
+        if returnValue == QMessageBox.Ok and okFunction != None:
             okFunction()
             QgsMessageLog.logMessage( "Ok cliccato" , 'MyPlugin', level=Qgis.Info)
-        elif returnValue == QtGui.QMessageBox.Cancel and cancelFunction != None:
+        elif returnValue == QMessageBox.Cancel and cancelFunction != None:
             cancelFunction()
             QgsMessageLog.logMessage( "Cancel cliccato" , 'MyPlugin', level=Qgis.Info)
 
