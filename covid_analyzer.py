@@ -25,12 +25,12 @@
 # Qgis library
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtGui import QIcon, QColor, QFont
-from qgis.PyQt.QtWidgets import QAction, QProgressBar, QMessageBox
+from qgis.PyQt.QtWidgets import QAction, QProgressBar
 from qgis.core import *
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
-from PyQt5.QtWidgets import QFileDialog
+from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
 from qgis.gui import (
     QgsMapCanvas,
