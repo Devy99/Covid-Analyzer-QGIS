@@ -868,10 +868,8 @@ def showPopup(type, message, informativeMessage, okFunction, cancelFunction ):
         returnValue = msg.exec_()
         if returnValue == QMessageBox.Ok and okFunction != None:
             okFunction()
-            QgsMessageLog.logMessage( "Ok cliccato" , 'MyPlugin', level=Qgis.Info)
         elif returnValue == QMessageBox.Cancel and cancelFunction != None:
             cancelFunction()
-            QgsMessageLog.logMessage( "Cancel cliccato" , 'MyPlugin', level=Qgis.Info)
 
 def clearCache():
     path = os.path.join(THIS_FOLDER, 'csv_cache/')
@@ -991,7 +989,6 @@ def performTableJoin(self, csvFilename, layerType):
     
     joinObject.setUsingMemoryCache(True)
     joinObject.setJoinLayer(csv)
-    QgsMessageLog.logMessage( csvUri, 'MyPlugin', level=Qgis.Info)
     
     shp.addJoin(joinObject)
 
